@@ -65,12 +65,12 @@ Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la st
 | Fonctionnalité | Détail |
 |---|---|
 | :file_folder: Chemin | Répertoire courant avec `~` en cyan |
-| :deciduous_tree: Branche git | Branche active en magenta |
+| :deciduous_tree: Branche git | Branche active en magenta + ● orange si dirty |
 | :robot: Modèle | Nom du modèle Claude (ex: Opus 4.6) en rose |
 | :satellite: Statusline | Version de la statusline + indicateur de mise à jour |
 | :dollar: Coût dynamique | Couleur adaptative selon le montant |
 | :heavy_plus_sign: :heavy_minus_sign: Lignes | Lignes ajoutées (vert) / supprimées (orange) |
-| :zap: Ratio API | Icône et couleur selon l'intensité (voir ci-dessous) |
+| :zap: Ratio API | Icône et couleur selon l'intensité + durée de session |
 | :pencil2: Tokens output | Tokens générés par Claude dans la session |
 | :bar_chart: Barre contexte | Barre `█░` colorée selon le remplissage |
 | :rotating_light: Alerte > 75% | Fond rouge quand le contexte se remplit |

@@ -1,8 +1,12 @@
 # Changelog
 
-## 1.7.1
+## 1.8.0
 
-- Vérification des mises à jour synchrone au démarrage quand le cache est expiré ou absent (l'indicateur `⬆` s'affiche dès le premier rendu au lieu du deuxième)
+- Indicateur git dirty : un `●` orange apparaît après la branche quand il y a des modifications non commitées
+- Durée de session affichée sur la ligne API avec couleur adaptative (vert < 30 min, jaune > 30 min, orange > 1h, rouge > 2h)
+- Mode de sortie affiché à côté du modèle : `🏃 sprinter` (mode fast) ou `🤓 concentré` (mode verbose)
+- Fallback si `jq` est absent : message d'aide avec la commande d'installation adaptée à l'OS (macOS, Linux, Windows)
+- Vérification des mises à jour synchrone au démarrage quand le cache est expiré ou absent (l'indicateur `⬆` s'affiche dès le premier rendu)
 
 ## 1.7.0
 

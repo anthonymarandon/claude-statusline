@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.7.1"
+STATUSLINE_VERSION="1.8.0"
+
+# Vérifier que jq est disponible
+if ! command -v jq &>/dev/null; then
+  case "$(uname -s)" in
+    Darwin) install_cmd="brew install jq" ;;
+    Linux)  install_cmd="sudo apt install jq" ;;
+    MINGW*|MSYS*|CYGWIN*) install_cmd="winget install jqlang.jq" ;;
+    *)      install_cmd="https://jqlang.github.io/jq/download/" ;;
+  esac
+  printf "\033[1;33m⚠ jq manquant — %s\033[0m" "$install_cmd"
+  exit 0
+fi
 
 input=$(cat)
 
@@ -91,16 +103,24 @@ dir="${cwd/#$HOME/~}"
 git_branch=""
 if [ -n "$cwd" ] && git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+  if [ -n "$(git -C "$cwd" status --porcelain 2>/dev/null | head -1)" ]; then
+    git_dirty=" \033[1;38;5;214m●${R}"
+  fi
 fi
 
 if [ -n "$git_branch" ]; then
-  path_part=$(printf "${C_PATH}%s${R} ${C_GIT} %s${R}" "$dir" "$git_branch")
+  path_part=$(printf "${C_PATH}%s${R} ${C_GIT} %s${R}%b" "$dir" "$git_branch" "${git_dirty:-}")
 else
   path_part=$(printf "${C_PATH} %s${R}" "$dir")
 fi
 
-# -- Model --
-model_part=$(printf "${C_MODEL}🤖 %s${R}" "$model")
+# -- Model + output style --
+style_indicator=""
+case "$output_style" in
+  concise) style_indicator=$(printf " ${DIM}🏃 sprinter${R}") ;;
+  verbose) style_indicator=$(printf " ${DIM}🤓 concentré${R}") ;;
+esac
+model_part=$(printf "${C_MODEL}🤖 %s${R}%s" "$model" "$style_indicator")
 
 # -- Version CLI (dim) --
 ver_part=$(printf "${C_VER}v%s${R}" "$version")
@@ -139,7 +159,26 @@ if [ "$duration_ms" -gt 0 ] 2>/dev/null && [ "$api_duration_ms" -gt 0 ] 2>/dev/n
     C_API="\033[38;5;208m"
     api_icon="🔥"
   fi
-  api_part=$(printf "${C_API}%s%s%%${R}" "$api_icon" "$api_pct")
+  # Durée de session lisible
+  total_sec=$(( duration_ms / 1000 ))
+  if [ "$total_sec" -ge 3600 ]; then
+    duration_fmt=$(printf "%dh%02dm" $(( total_sec / 3600 )) $(( (total_sec % 3600) / 60 )))
+  elif [ "$total_sec" -ge 60 ]; then
+    duration_fmt=$(printf "%dm%02ds" $(( total_sec / 60 )) $(( total_sec % 60 )))
+  else
+    duration_fmt=$(printf "%ds" "$total_sec")
+  fi
+  # Couleur durée selon le temps écoulé
+  if [ "$total_sec" -ge 7200 ]; then
+    C_DUR="\033[1;38;5;196m"   # rouge > 2h
+  elif [ "$total_sec" -ge 3600 ]; then
+    C_DUR="\033[1;38;5;208m"   # orange > 1h
+  elif [ "$total_sec" -ge 1800 ]; then
+    C_DUR="\033[1;38;5;220m"   # jaune > 30min
+  else
+    C_DUR="\033[38;5;78m"      # vert < 30min
+  fi
+  api_part=$(printf "${C_API}%s%s%%${R} ${SEP}${C_DUR}⏱ %s${R}" "$api_icon" "$api_pct" "$duration_fmt")
 else
   api_part=""
 fi

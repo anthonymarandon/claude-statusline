@@ -12,11 +12,11 @@ Tu dois expliquer à l'utilisateur comment lire sa statusline Claude Code. Repro
 Commence par afficher un exemple visuel de la statusline telle qu'elle apparaît dans le terminal (utilise un bloc de code avec des valeurs d'exemple réalistes) :
 
 ```
-📂 Dossier    ~/mon-projet  main
+📂 Dossier    ~/mon-projet  main ●
 🤖 Modèle     Claude 4.6 Opus
 💰 Coût       $1.2450
 📝 Lignes     +47 -12
-⚡ API        🔥65%
+⚡ API        🔥65% │ 45m12s
 ✎ Tokens     8.3k
 📊 Contexte   ████░░░░░░ 40%
 📡 Statusline v1.7.0  ⬆ v1.7.0 dispo
@@ -26,9 +26,11 @@ Puis explique chaque ligne :
 
 ### 📂 Dossier
 Le répertoire de travail actuel + la branche Git si le projet est un dépôt Git.
+- Un **●** orange apparaît après le nom de la branche s'il y a des modifications non commitées (fichiers modifiés, ajoutés ou supprimés).
 
 ### 🤖 Modèle
 Le modèle Claude utilisé (Opus, Sonnet, Haiku).
+- Si un mode de sortie est actif, il s'affiche à côté : **🏃 sprinter** (mode `/fast`) ou **🤓 concentré** (mode `/verbose`). En mode par défaut, rien n'est affiché.
 
 ### 💰 Coût
 Le coût cumulé de la session en dollars USD.
@@ -46,6 +48,12 @@ Le ratio entre le temps passé à appeler l'API Claude et le temps total de la s
 - 🌿 **< 40%** : rythme posé, tu réfléchis entre les prompts
 - ⚡ **40-70%** : bon équilibre
 - 🔥 **> 70%** : tu mitrailles les prompts !
+
+Après le séparateur, la **durée totale de la session** est affichée avec une couleur adaptative :
+- **Vert** : < 30 min — session fraîche
+- **Jaune** : 30 min – 1h — ça commence à durer
+- **Orange** : 1h – 2h — session longue
+- **Rouge** : > 2h — pense à ouvrir une nouvelle session
 
 Cette ligne n'apparaît que si des appels API ont été effectués.
 
