@@ -1,7 +1,6 @@
 ---
 name: release
-description: Checklist complète avant de publier une nouvelle version de la statusline
-disable-model-invocation: true
+description: "Checklist complète avant publication : bump de version, changelog, documentation, tests de syntaxe, commit et tag. À utiliser quand l'utilisateur prépare une nouvelle version ou demande une release."
 ---
 
 # Checklist de release
