@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.5.0"
+STATUSLINE_VERSION="1.6.0"
 
 input=$(cat)
 
@@ -31,7 +31,7 @@ C_PATH="\033[1;36m"        # bold cyan
 C_GIT="\033[1;35m"         # bold magenta
 C_MODEL="\033[1;38;5;213m" # bold hot pink
 C_ADD="\033[1;38;5;46m"    # bright neon green
-C_DEL="\033[1;38;5;196m"   # bright neon red
+C_DEL="\033[1;38;5;208m"   # orange
 C_VER="\033[38;5;245m"     # gray
 C_OUTPUT="\033[1;38;5;117m" # bold sky blue
 C_UPDATE="\033[1;38;5;82m" # bright green for update notice
@@ -82,16 +82,6 @@ if [ -n "$cached_version" ] && [ -n "$STATUSLINE_VERSION" ]; then
     update_part=$(printf "${C_UPDATE}⬆ v%s${R}" "$cached_version")
   fi
 fi
-
-# -- Terminal width --
-term_width=$(tput cols 2>/dev/null || echo 120)
-
-# Strip ANSI escape codes to measure visible length
-_visible_len() {
-  local stripped
-  stripped=$(printf "%b" "$1" | sed $'s/\033\[[0-9;]*m//g')
-  echo "${#stripped}"
-}
 
 # -- Directory --
 dir="${cwd/#$HOME/~}"
@@ -195,57 +185,18 @@ if [ "$exceeds_200k" = "true" ]; then
   warn=$(printf " \033[1;5;41;97m ⚠ >200k \033[0m")
 fi
 
-# -- Assemble (responsive reflow) --
-sep=$(printf "%b" "$SEP")
-sep_len=3  # visible length of " │ "
+# -- Labels --
+C_LABEL="\033[38;5;245m"  # gray for labels
 
-# Build the 4 logical groups
-grp_a="${path_part}"
-grp_b="${model_part} ${ver_part}"
-grp_c="${cost_part}${sep}${lines_part}"
-[ -n "$api_part" ] && grp_c+="${sep}${api_part}"
-grp_d=""
-[ -n "$output_part" ] && grp_d+="${output_part}"
-grp_d_ctx="${ctx_part}${warn}"
-if [ -n "$grp_d" ]; then
-  grp_d+="${sep}${grp_d_ctx}"
-else
-  grp_d="${grp_d_ctx}"
+# -- Assemble (one element per line) --
+printf "%b\n" "$(printf "${C_LABEL}📂 Dossier    ${R}")$path_part"
+printf "%b\n" "$(printf "${C_LABEL}🤖 Modèle     ${R}")${model_part} ${ver_part}"
+printf "%b\n" "$(printf "${C_LABEL}💰 Coût       ${R}")$cost_part"
+printf "%b\n" "$(printf "${C_LABEL}📝 Lignes     ${R}")$lines_part"
+if [ -n "$api_part" ]; then
+  printf "%b\n" "$(printf "${C_LABEL}⚡ API        ${R}")$api_part"
 fi
-
-# Measure visible lengths
-len_a=$(_visible_len "$grp_a")
-len_b=$(_visible_len "$grp_b")
-len_c=$(_visible_len "$grp_c")
-len_d=$(_visible_len "$grp_d")
-
-# Try 1 line: A | B | C | D
-total_1=$(( len_a + sep_len + len_b + sep_len + len_c + sep_len + len_d ))
-if [ "$total_1" -le "$term_width" ]; then
-  printf "%b" "${grp_a}${sep}${grp_b}${sep}${grp_c}${sep}${grp_d}"
-  exit 0
+if [ -n "$output_part" ]; then
+  printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$output_part"
 fi
-
-# Try 2 lines: (A | B) / (C | D)
-line1_len=$(( len_a + sep_len + len_b ))
-line2_len=$(( len_c + sep_len + len_d ))
-if [ "$line1_len" -le "$term_width" ] && [ "$line2_len" -le "$term_width" ]; then
-  printf "%b\n" "${grp_a}${sep}${grp_b}"
-  printf "%b" "${grp_c}${sep}${grp_d}"
-  exit 0
-fi
-
-# Try 3 lines: A / (B | C) / D
-line2_len_alt=$(( len_b + sep_len + len_c ))
-if [ "$len_a" -le "$term_width" ] && [ "$line2_len_alt" -le "$term_width" ] && [ "$len_d" -le "$term_width" ]; then
-  printf "%b\n" "${grp_a}"
-  printf "%b\n" "${grp_b}${sep}${grp_c}"
-  printf "%b" "${grp_d}"
-  exit 0
-fi
-
-# Fallback 4 lines: A / B / C / D
-printf "%b\n" "${grp_a}"
-printf "%b\n" "${grp_b}"
-printf "%b\n" "${grp_c}"
-printf "%b" "${grp_d}"
+printf "%b" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"

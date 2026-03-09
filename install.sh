@@ -127,6 +127,13 @@ else
   changes+=("  ${YELLOW}~/.claude/skills/statusline-update/SKILL.md${R} sera créé (commande ${BOLD}/statusline-update${R})")
 fi
 
+HELP_SKILL_DEST="$HOME/.claude/skills/statusline-help/SKILL.md"
+if [ -f "$HELP_SKILL_DEST" ]; then
+  changes+=("  ${YELLOW}~/.claude/skills/statusline-help/SKILL.md${R} sera mis à jour")
+else
+  changes+=("  ${YELLOW}~/.claude/skills/statusline-help/SKILL.md${R} sera créé (commande ${BOLD}/statusline-help${R})")
+fi
+
 if [ -f "$UPDATE_SCRIPT_DEST" ]; then
   changes+=("  ${YELLOW}~/.claude/update.sh${R} sera mis à jour")
 else
@@ -192,6 +199,16 @@ if curl -fsSL "$UPDATE_SKILL_URL" -o "$UPDATE_SKILL_DEST"; then
   echo -e "${GREEN}✓${R} Commande /statusline-update installée"
 else
   echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-update (non bloquant)"
+fi
+
+# Installer le skill /statusline-help
+HELP_SKILL_URL="$REPO_BASE/skills/statusline-help/SKILL.md"
+mkdir -p "$HOME/.claude/skills/statusline-help"
+
+if curl -fsSL "$HELP_SKILL_URL" -o "$HELP_SKILL_DEST"; then
+  echo -e "${GREEN}✓${R} Commande /statusline-help installée"
+else
+  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-help (non bloquant)"
 fi
 
 # Installer le script de mise à jour

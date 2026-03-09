@@ -6,7 +6,7 @@
 
 ## :eyes: Aperçu
 
-Statusline responsive qui s'adapte à la largeur du terminal, coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
+Statusline verticale avec un indicateur par ligne, labels clairs, coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
 
 ![Preview](screenshots/preview.png)
 
@@ -50,6 +50,10 @@ L'installation inclut automatiquement la commande `/session-info`. Tapez-la dans
 
 > Claude lit les données de sa propre statusline et vous les explique.
 
+### Commande `/statusline-help`
+
+Tapez `/statusline-help` dans Claude Code pour obtenir une **explication visuelle** de chaque indicateur de la statusline : ce qu'il mesure, les codes couleur, et quand il apparaît.
+
 ### Commande `/statusline-update`
 
 Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la statusline sans quitter votre session.
@@ -65,14 +69,14 @@ Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la st
 | :robot: Modèle | Nom du modèle Claude (ex: Opus 4.6) en rose |
 | :label: Version | Numéro de version de Claude Code en gris |
 | :dollar: Coût dynamique | Couleur adaptative selon le montant |
-| :heavy_plus_sign: :heavy_minus_sign: Lignes | Lignes ajoutées (vert) / supprimées (rouge) |
+| :heavy_plus_sign: :heavy_minus_sign: Lignes | Lignes ajoutées (vert) / supprimées (orange) |
 | :zap: Ratio API | Icône et couleur selon l'intensité (voir ci-dessous) |
 | :pencil2: Tokens output | Tokens générés par Claude dans la session |
 | :bar_chart: Barre contexte | Barre `█░` colorée selon le remplissage |
 | :rotating_light: Alerte > 75% | Fond rouge quand le contexte se remplit |
 | :warning: Alerte > 200k | Avertissement clignotant si la fenêtre explose |
-| :left_right_arrow: Responsive | Layout adaptatif : 1 à 4 lignes selon la largeur du terminal |
 | :arrow_up: Mise à jour | Indicateur vert quand une nouvelle version est disponible |
+| :grey_question: `/statusline-help` | Explique chaque indicateur de la statusline |
 
 ### :dollar: Coût dynamique
 
@@ -122,7 +126,7 @@ C_PATH="\033[1;36m"        # Chemin — cyan
 C_GIT="\033[1;35m"         # Branche git — magenta
 C_MODEL="\033[1;38;5;213m" # Modèle — rose
 C_ADD="\033[1;38;5;46m"    # Lignes ajoutées — vert
-C_DEL="\033[1;38;5;196m"   # Lignes supprimées — rouge
+C_DEL="\033[1;38;5;208m"   # Lignes supprimées — orange
 ```
 
 ---

@@ -40,6 +40,7 @@ FILES=(
   "update.sh"
   "skills/session-info/SKILL.md"
   "skills/statusline-update/SKILL.md"
+  "skills/statusline-help/SKILL.md"
 )
 
 errors=0

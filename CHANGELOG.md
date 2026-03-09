@@ -1,11 +1,13 @@
 # Changelog
 
-## 1.5.0
+## 1.6.0
 
-- Statusline responsive : le layout s'adapte dynamiquement à la largeur du terminal
-  - 1 ligne si tout rentre, 2/3/4 lignes sinon — reflow automatique basé sur le contenu réel
-  - Détection via `tput cols`, compatible tous terminaux (macOS, Linux, WSL)
-- Vérification des mises à jour toutes les 2 minutes (au lieu d'1 heure), reste dans la limite GitHub de 60 req/h
+- Nouveau layout vertical : un indicateur par ligne avec label et emoji pour une lecture claire
+  - 📂 Dossier, 🤖 Modèle, 💰 Coût, 📝 Lignes, ⚡ API, ✎ Tokens, 📊 Contexte
+- Retrait du responsive (non fonctionnel dans le contexte du CLI)
+- Couleur des lignes supprimées : orange au lieu de rouge pour une meilleure lisibilité
+- Nouveau skill `/statusline-help` : explique visuellement chaque indicateur de la statusline
+- Vérification des mises à jour toutes les 2 minutes (au lieu d'1 heure)
 
 ## 1.4.1
 
