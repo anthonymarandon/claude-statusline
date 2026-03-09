@@ -98,6 +98,8 @@ STATUSLINE_CONFIG='{"type":"command","command":"bash ~/.claude/statusline-comman
 changes=()
 
 SKILL_DEST="$HOME/.claude/skills/session-info/SKILL.md"
+UPDATE_SKILL_DEST="$HOME/.claude/skills/statusline-update/SKILL.md"
+UPDATE_SCRIPT_DEST="$HOME/.claude/update.sh"
 
 if [ -f "$SCRIPT_DEST" ]; then
   changes+=("  ${YELLOW}~/.claude/statusline-command.sh${R} sera mis à jour")
@@ -117,6 +119,18 @@ if [ -f "$SKILL_DEST" ]; then
   changes+=("  ${YELLOW}~/.claude/skills/session-info/SKILL.md${R} sera mis à jour")
 else
   changes+=("  ${YELLOW}~/.claude/skills/session-info/SKILL.md${R} sera créé (commande ${BOLD}/session-info${R})")
+fi
+
+if [ -f "$UPDATE_SKILL_DEST" ]; then
+  changes+=("  ${YELLOW}~/.claude/skills/statusline-update/SKILL.md${R} sera mis à jour")
+else
+  changes+=("  ${YELLOW}~/.claude/skills/statusline-update/SKILL.md${R} sera créé (commande ${BOLD}/statusline-update${R})")
+fi
+
+if [ -f "$UPDATE_SCRIPT_DEST" ]; then
+  changes+=("  ${YELLOW}~/.claude/update.sh${R} sera mis à jour")
+else
+  changes+=("  ${YELLOW}~/.claude/update.sh${R} sera créé (script de mise à jour)")
 fi
 
 if [ ${#changes[@]} -gt 0 ]; then
@@ -170,12 +184,32 @@ else
   echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /session-info (non bloquant)"
 fi
 
+# Installer le skill /statusline-update
+UPDATE_SKILL_URL="$REPO_BASE/skills/statusline-update/SKILL.md"
+mkdir -p "$HOME/.claude/skills/statusline-update"
+
+if curl -fsSL "$UPDATE_SKILL_URL" -o "$UPDATE_SKILL_DEST"; then
+  echo -e "${GREEN}✓${R} Commande /statusline-update installée"
+else
+  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-update (non bloquant)"
+fi
+
+# Installer le script de mise à jour
+UPDATE_SCRIPT_URL="$REPO_BASE/update.sh"
+
+if curl -fsSL "$UPDATE_SCRIPT_URL" -o "$UPDATE_SCRIPT_DEST"; then
+  chmod +x "$UPDATE_SCRIPT_DEST"
+  echo -e "${GREEN}✓${R} Script de mise à jour installé"
+else
+  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le script de mise à jour (non bloquant)"
+fi
+
 # Terminé
 echo ""
 echo -e "${GREEN}=== Installation terminée ! ===${R}"
 echo ""
 echo "Relancez Claude Code pour voir votre nouvelle statusline."
 echo ""
-echo -e "Pour les mises à jour, rendez-vous sur le dépôt GitHub :"
-echo -e "  ${CYAN}$REPO_URL${R}"
+echo -e "Mises à jour : tapez ${BOLD}/statusline-update${R} dans Claude Code"
+echo -e "ou lancez directement : ${CYAN}bash ~/.claude/update.sh${R}"
 echo ""

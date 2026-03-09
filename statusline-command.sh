@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
+STATUSLINE_VERSION="1.3.0"
+
 input=$(cat)
 
 # Debug: sauvegarde le dernier JSON reçu
@@ -32,7 +34,54 @@ C_ADD="\033[1;38;5;46m"    # bright neon green
 C_DEL="\033[1;38;5;196m"   # bright neon red
 C_VER="\033[38;5;245m"     # gray
 C_OUTPUT="\033[1;38;5;117m" # bold sky blue
+C_UPDATE="\033[1;38;5;82m" # bright green for update notice
 SEP="\033[38;5;99m │ ${R}"
+
+# -- Update check (cache 1h, async) --
+UPDATE_CACHE="$HOME/.claude/.statusline-latest-version"
+UPDATE_TTL=3600  # 1 heure en secondes
+update_part=""
+
+_check_update_remote() {
+  local latest
+  latest=$(curl -sf --max-time 5 "https://api.github.com/repos/anthonymarandon/claude-statusline/tags?per_page=1" \
+    | jq -r '.[0].name // empty' 2>/dev/null)
+  if [ -n "$latest" ]; then
+    # Stocker version + timestamp
+    echo "${latest#v}|$(date +%s)" > "$UPDATE_CACHE" 2>/dev/null
+  fi
+}
+
+# Lire le cache s'il existe
+if [ -f "$UPDATE_CACHE" ]; then
+  IFS='|' read -r cached_version cached_ts < "$UPDATE_CACHE"
+  now=$(date +%s)
+  age=$(( now - ${cached_ts:-0} ))
+
+  # Si le cache a expiré, relancer un check en arrière-plan
+  if [ "$age" -ge "$UPDATE_TTL" ]; then
+    _check_update_remote &
+    disown 2>/dev/null
+  fi
+else
+  # Pas de cache : premier lancement, check en arrière-plan
+  cached_version=""
+  _check_update_remote &
+  disown 2>/dev/null
+fi
+
+# Comparer les versions (sémantique simple a.b.c)
+_ver_to_num() {
+  echo "$1" | awk -F. '{ printf "%d%03d%03d", $1, $2, $3 }'
+}
+
+if [ -n "$cached_version" ] && [ -n "$STATUSLINE_VERSION" ]; then
+  local_num=$(_ver_to_num "$STATUSLINE_VERSION")
+  remote_num=$(_ver_to_num "$cached_version")
+  if [ "$remote_num" -gt "$local_num" ] 2>/dev/null; then
+    update_part=$(printf "${C_UPDATE}⬆ v%s${R}" "$cached_version")
+  fi
+fi
 
 # -- Directory --
 dir="${cwd/#$HOME/~}"
@@ -52,8 +101,11 @@ fi
 # -- Model --
 model_part=$(printf "${C_MODEL}🤖 %s${R}" "$model")
 
-# -- Version (dim) --
+# -- Version (dim) + update indicator --
 ver_part=$(printf "${C_VER}v%s${R}" "$version")
+if [ -n "$update_part" ]; then
+  ver_part+=$(printf " %b" "$update_part")
+fi
 
 # -- Cost with dynamic color --
 cost_fmt=$(echo "$cost_usd" | LANG=C awk '{printf "%.4f", $1}')

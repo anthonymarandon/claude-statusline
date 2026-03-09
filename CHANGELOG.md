@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+
+- Notification de mise à jour : la statusline affiche `⬆ vX.Y.Z` quand une nouvelle version est disponible
+- Vérification automatique via l'API GitHub (1 check/heure, cache local, fetch asynchrone)
+- Script `update.sh` pour mise à jour non-interactive
+- Commande `/statusline-update` pour mettre à jour directement depuis Claude Code
+- Commande `/release` interne au projet (checklist avant publication)
+
 ## 1.2.0
 
 - Icônes adaptatives pour le ratio API : 🌿 (économe), ⚡ (actif), 🔥 (intensif)

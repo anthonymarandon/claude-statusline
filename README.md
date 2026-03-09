@@ -22,6 +22,22 @@ curl -fsSL https://raw.githubusercontent.com/anthonymarandon/claude-statusline/m
 
 ---
 
+## :arrows_counterclockwise: Mise à jour
+
+La statusline vérifie automatiquement (1 fois par heure) si une nouvelle version est disponible. Si c'est le cas, un indicateur `⬆ vX.Y.Z` apparaît dans la statusline.
+
+Pour mettre à jour, deux options :
+
+```bash
+# Depuis Claude Code (recommandé)
+/statusline-update
+
+# Ou directement en terminal
+bash ~/.claude/update.sh
+```
+
+---
+
 ## :speech_balloon: Commande `/session-info`
 
 L'installation inclut automatiquement la commande `/session-info`. Tapez-la dans Claude Code pour obtenir un **résumé en langage naturel** de votre session :
@@ -33,6 +49,10 @@ L'installation inclut automatiquement la commande `/session-info`. Tapez-la dans
 - Des alertes si le contexte ou le coût deviennent critiques
 
 > Claude lit les données de sa propre statusline et vous les explique.
+
+### Commande `/statusline-update`
+
+Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la statusline sans quitter votre session.
 
 ---
 
@@ -51,6 +71,7 @@ L'installation inclut automatiquement la commande `/session-info`. Tapez-la dans
 | :bar_chart: Barre contexte | Barre `█░` colorée selon le remplissage |
 | :rotating_light: Alerte > 75% | Fond rouge quand le contexte se remplit |
 | :warning: Alerte > 200k | Avertissement clignotant si la fenêtre explose |
+| :arrow_up: Mise à jour | Indicateur vert quand une nouvelle version est disponible |
 
 ### :dollar: Coût dynamique
 
