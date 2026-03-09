@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.4.1"
+STATUSLINE_VERSION="1.5.0"
 
 input=$(cat)
 
@@ -39,7 +39,7 @@ SEP="\033[38;5;99m │ ${R}"
 
 # -- Update check (cache 1h, async) --
 UPDATE_CACHE="$HOME/.claude/.statusline-latest-version"
-UPDATE_TTL=3600  # 1 heure en secondes
+UPDATE_TTL=120  # 2 minutes en secondes (max ~30 req/h, GitHub autorise 60/h)
 update_part=""
 
 _check_update_remote() {
@@ -82,6 +82,16 @@ if [ -n "$cached_version" ] && [ -n "$STATUSLINE_VERSION" ]; then
     update_part=$(printf "${C_UPDATE}⬆ v%s${R}" "$cached_version")
   fi
 fi
+
+# -- Terminal width --
+term_width=$(tput cols 2>/dev/null || echo 120)
+
+# Strip ANSI escape codes to measure visible length
+_visible_len() {
+  local stripped
+  stripped=$(printf "%b" "$1" | sed $'s/\033\[[0-9;]*m//g')
+  echo "${#stripped}"
+}
 
 # -- Directory --
 dir="${cwd/#$HOME/~}"
@@ -185,31 +195,57 @@ if [ "$exceeds_200k" = "true" ]; then
   warn=$(printf " \033[1;5;41;97m ⚠ >200k \033[0m")
 fi
 
-# -- Assemble (3 lines) --
-# Line 1: Path | Model v.X
-line1="$path_part"
-line1+=$(printf "%b" "$SEP")
-line1+="$model_part "
-line1+="$ver_part"
+# -- Assemble (responsive reflow) --
+sep=$(printf "%b" "$SEP")
+sep_len=3  # visible length of " │ "
 
-# Line 2: $cost | +N -N | ⚡API% | ✎ output | context bar
-line2="$cost_part"
-line2+=$(printf "%b" "$SEP")
-line2+="$lines_part"
-
-if [ -n "$api_part" ]; then
-  line2+=$(printf "%b" "$SEP")
-  line2+="$api_part"
+# Build the 4 logical groups
+grp_a="${path_part}"
+grp_b="${model_part} ${ver_part}"
+grp_c="${cost_part}${sep}${lines_part}"
+[ -n "$api_part" ] && grp_c+="${sep}${api_part}"
+grp_d=""
+[ -n "$output_part" ] && grp_d+="${output_part}"
+grp_d_ctx="${ctx_part}${warn}"
+if [ -n "$grp_d" ]; then
+  grp_d+="${sep}${grp_d_ctx}"
+else
+  grp_d="${grp_d_ctx}"
 fi
 
-if [ -n "$output_part" ]; then
-  line2+=$(printf "%b" "$SEP")
-  line2+="$output_part"
+# Measure visible lengths
+len_a=$(_visible_len "$grp_a")
+len_b=$(_visible_len "$grp_b")
+len_c=$(_visible_len "$grp_c")
+len_d=$(_visible_len "$grp_d")
+
+# Try 1 line: A | B | C | D
+total_1=$(( len_a + sep_len + len_b + sep_len + len_c + sep_len + len_d ))
+if [ "$total_1" -le "$term_width" ]; then
+  printf "%b" "${grp_a}${sep}${grp_b}${sep}${grp_c}${sep}${grp_d}"
+  exit 0
 fi
 
-line2+=$(printf "%b" "$SEP")
-line2+="$ctx_part"
-line2+="$warn"
+# Try 2 lines: (A | B) / (C | D)
+line1_len=$(( len_a + sep_len + len_b ))
+line2_len=$(( len_c + sep_len + len_d ))
+if [ "$line1_len" -le "$term_width" ] && [ "$line2_len" -le "$term_width" ]; then
+  printf "%b\n" "${grp_a}${sep}${grp_b}"
+  printf "%b" "${grp_c}${sep}${grp_d}"
+  exit 0
+fi
 
-printf "%b\n" "$line1"
-printf "%b" "$line2"
+# Try 3 lines: A / (B | C) / D
+line2_len_alt=$(( len_b + sep_len + len_c ))
+if [ "$len_a" -le "$term_width" ] && [ "$line2_len_alt" -le "$term_width" ] && [ "$len_d" -le "$term_width" ]; then
+  printf "%b\n" "${grp_a}"
+  printf "%b\n" "${grp_b}${sep}${grp_c}"
+  printf "%b" "${grp_d}"
+  exit 0
+fi
+
+# Fallback 4 lines: A / B / C / D
+printf "%b\n" "${grp_a}"
+printf "%b\n" "${grp_b}"
+printf "%b\n" "${grp_c}"
+printf "%b" "${grp_d}"

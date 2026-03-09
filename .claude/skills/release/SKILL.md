@@ -11,7 +11,10 @@ Tu dois vérifier et préparer une release de la statusline. Passe en revue **ch
 ## 1. Version
 
 - [ ] `STATUSLINE_VERSION` dans `statusline-command.sh` est à jour avec le nouveau numéro de version
-- [ ] Le numéro suit le semver : MAJOR.MINOR.PATCH
+- [ ] Le numéro suit le semver `MAJOR.MINOR.PATCH` selon la règle suivante :
+  - **PATCH** (+0.0.1) : correctif, bugfix, typo, ajustement mineur sans changement fonctionnel
+  - **MINOR** (+0.1.0) : nouvelle fonctionnalité, amélioration, ajout d'un skill — rétrocompatible
+  - **MAJOR** (+1.0.0) : breaking change, refonte majeure, changement incompatible avec les versions précédentes
 
 ## 2. Changelog
 

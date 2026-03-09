@@ -6,7 +6,7 @@
 
 ## :eyes: Aperçu
 
-Affichage multi-ligne, coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
+Statusline responsive qui s'adapte à la largeur du terminal, coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
 
 ![Preview](screenshots/preview.png)
 
@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/anthonymarandon/claude-statusline/m
 
 ## :arrows_counterclockwise: Mise à jour
 
-La statusline vérifie automatiquement (1 fois par heure) si une nouvelle version est disponible. Si c'est le cas, un indicateur `⬆ vX.Y.Z` apparaît dans la statusline.
+La statusline vérifie automatiquement (toutes les 2 minutes) si une nouvelle version est disponible. Si c'est le cas, un indicateur `⬆ vX.Y.Z` apparaît dans la statusline.
 
 Pour mettre à jour, deux options :
 
@@ -71,6 +71,7 @@ Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la st
 | :bar_chart: Barre contexte | Barre `█░` colorée selon le remplissage |
 | :rotating_light: Alerte > 75% | Fond rouge quand le contexte se remplit |
 | :warning: Alerte > 200k | Avertissement clignotant si la fenêtre explose |
+| :left_right_arrow: Responsive | Layout adaptatif : 1 à 4 lignes selon la largeur du terminal |
 | :arrow_up: Mise à jour | Indicateur vert quand une nouvelle version est disponible |
 
 ### :dollar: Coût dynamique
