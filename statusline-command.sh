@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.6.0"
+STATUSLINE_VERSION="1.7.0"
 
 input=$(cat)
 
@@ -101,10 +101,13 @@ fi
 # -- Model --
 model_part=$(printf "${C_MODEL}🤖 %s${R}" "$model")
 
-# -- Version (dim) + update indicator --
+# -- Version CLI (dim) --
 ver_part=$(printf "${C_VER}v%s${R}" "$version")
+
+# -- Statusline version + update indicator --
+statusline_part=$(printf "${C_VER}v%s${R}" "$STATUSLINE_VERSION")
 if [ -n "$update_part" ]; then
-  ver_part+=$(printf " %b" "$update_part")
+  statusline_part+=$(printf " %b" "$update_part")
 fi
 
 # -- Cost with dynamic color --
@@ -190,7 +193,7 @@ C_LABEL="\033[38;5;245m"  # gray for labels
 
 # -- Assemble (one element per line) --
 printf "%b\n" "$(printf "${C_LABEL}📂 Dossier    ${R}")$path_part"
-printf "%b\n" "$(printf "${C_LABEL}🤖 Modèle     ${R}")${model_part} ${ver_part}"
+printf "%b\n" "$(printf "${C_LABEL}🤖 Modèle     ${R}")${model_part}"
 printf "%b\n" "$(printf "${C_LABEL}💰 Coût       ${R}")$cost_part"
 printf "%b\n" "$(printf "${C_LABEL}📝 Lignes     ${R}")$lines_part"
 if [ -n "$api_part" ]; then
@@ -199,4 +202,5 @@ fi
 if [ -n "$output_part" ]; then
   printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$output_part"
 fi
+printf "%b\n" "$(printf "${C_LABEL}📡 Statusline ${R}")$statusline_part"
 printf "%b" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"

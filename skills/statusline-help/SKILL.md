@@ -13,12 +13,13 @@ Commence par afficher un exemple visuel de la statusline telle qu'elle apparaît
 
 ```
 📂 Dossier    ~/mon-projet  main
-🤖 Modèle     Claude 4.6 Opus v1.26.9
+🤖 Modèle     Claude 4.6 Opus
 💰 Coût       $1.2450
 📝 Lignes     +47 -12
 ⚡ API        🔥65%
 ✎ Tokens     8.3k
 📊 Contexte   ████░░░░░░ 40%
+📡 Statusline v1.7.0  ⬆ v1.7.0 dispo
 ```
 
 Puis explique chaque ligne :
@@ -27,8 +28,7 @@ Puis explique chaque ligne :
 Le répertoire de travail actuel + la branche Git si le projet est un dépôt Git.
 
 ### 🤖 Modèle
-Le modèle Claude utilisé (Opus, Sonnet, Haiku) + la version du CLI Claude Code.
-- Si une mise à jour est disponible, un indicateur vert `⬆ vX.X.X` apparaît à côté.
+Le modèle Claude utilisé (Opus, Sonnet, Haiku).
 
 ### 💰 Coût
 Le coût cumulé de la session en dollars USD.
@@ -53,6 +53,10 @@ Cette ligne n'apparaît que si des appels API ont été effectués.
 Le nombre total de tokens générés par Claude dans la session (en milliers si > 1000).
 
 Cette ligne n'apparaît que si des tokens ont été générés.
+
+### 📡 Statusline
+La version actuelle de la statusline installée. Si une mise à jour est disponible, un indicateur vert `⬆ vX.X.X dispo` apparaît à côté.
+- C'est bien une mise à jour de **la statusline**, pas du modèle Claude ni du CLI.
 
 ### 📊 Contexte
 La barre de progression du contexte — combien de la fenêtre de contexte est utilisée.

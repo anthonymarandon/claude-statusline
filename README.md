@@ -67,7 +67,7 @@ Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la st
 | :file_folder: Chemin | Répertoire courant avec `~` en cyan |
 | :deciduous_tree: Branche git | Branche active en magenta |
 | :robot: Modèle | Nom du modèle Claude (ex: Opus 4.6) en rose |
-| :label: Version | Numéro de version de Claude Code en gris |
+| :satellite: Statusline | Version de la statusline + indicateur de mise à jour |
 | :dollar: Coût dynamique | Couleur adaptative selon le montant |
 | :heavy_plus_sign: :heavy_minus_sign: Lignes | Lignes ajoutées (vert) / supprimées (orange) |
 | :zap: Ratio API | Icône et couleur selon l'intensité (voir ci-dessous) |

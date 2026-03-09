@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0
+
+- Nouvelle ligne `📡 Statusline` dédiée à la version de la statusline et aux notifications de mise à jour
+- Séparation claire entre le modèle Claude et la version de la statusline (évite la confusion avec une MAJ du modèle)
+- La ligne `🤖 Modèle` n'affiche plus que le nom du modèle Claude
+- Mise à jour du skill `/statusline-help` pour refléter le nouveau layout
+
 ## 1.6.0
 
 - Nouveau layout vertical : un indicateur par ligne avec label et emoji pour une lecture claire
