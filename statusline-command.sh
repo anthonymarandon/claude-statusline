@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.3.0"
+STATUSLINE_VERSION="1.4.0"
 
 input=$(cat)
 
@@ -185,29 +185,31 @@ if [ "$exceeds_200k" = "true" ]; then
   warn=$(printf " \033[1;5;41;97m ⚠ >200k \033[0m")
 fi
 
-# -- Assemble --
-# Path | Model v.X | $cost | +N -N | ⚡API% | ✎ output | progress bar
-out="$path_part"
-out+=$(printf "%b" "$SEP")
-out+="$model_part "
-out+="$ver_part"
-out+=$(printf "%b" "$SEP")
-out+="$cost_part"
-out+=$(printf "%b" "$SEP")
-out+="$lines_part"
+# -- Assemble (3 lines) --
+# Line 1: Path | Model v.X
+line1="$path_part"
+line1+=$(printf "%b" "$SEP")
+line1+="$model_part "
+line1+="$ver_part"
+
+# Line 2: $cost | +N -N | ⚡API% | ✎ output | context bar
+line2="$cost_part"
+line2+=$(printf "%b" "$SEP")
+line2+="$lines_part"
 
 if [ -n "$api_part" ]; then
-  out+=$(printf "%b" "$SEP")
-  out+="$api_part"
+  line2+=$(printf "%b" "$SEP")
+  line2+="$api_part"
 fi
 
 if [ -n "$output_part" ]; then
-  out+=$(printf "%b" "$SEP")
-  out+="$output_part"
+  line2+=$(printf "%b" "$SEP")
+  line2+="$output_part"
 fi
 
-out+=$(printf "%b" "$SEP")
-out+="$ctx_part"
-out+="$warn"
+line2+=$(printf "%b" "$SEP")
+line2+="$ctx_part"
+line2+="$warn"
 
-printf "%b" "$out"
+printf "%b\n" "$line1"
+printf "%b" "$line2"

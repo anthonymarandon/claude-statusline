@@ -6,7 +6,7 @@
 
 ## :eyes: Aperçu
 
-Coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
+Affichage multi-ligne, coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
 
 ![Preview](screenshots/preview.png)
 

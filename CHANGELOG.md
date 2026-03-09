@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+
+- Affichage multi-ligne : la statusline s'affiche désormais sur 2 lignes pour une meilleure lisibilité
+  - Ligne 1 : chemin + branche git + modèle + version
+  - Ligne 2 : coût + lignes modifiées + ratio API + tokens output + barre de contexte
+- Meilleure adaptation aux fenêtres étroites
+
 ## 1.3.0
 
 - Notification de mise à jour : la statusline affiche `⬆ vX.Y.Z` quand une nouvelle version est disponible
