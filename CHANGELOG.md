@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+
+- Refonte du ton de `/session-info` : plus fun, plus personnel, ambiance pote dev qui charrie
+
 ## 1.4.0
 
 - Affichage multi-ligne : la statusline s'affiche désormais sur 2 lignes pour une meilleure lisibilité

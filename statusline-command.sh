@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.4.0"
+STATUSLINE_VERSION="1.4.1"
 
 input=$(cat)
 
