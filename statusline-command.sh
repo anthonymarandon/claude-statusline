@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.7.0"
+STATUSLINE_VERSION="1.7.1"
 
 input=$(cat)
 
@@ -37,7 +37,7 @@ C_OUTPUT="\033[1;38;5;117m" # bold sky blue
 C_UPDATE="\033[1;38;5;82m" # bright green for update notice
 SEP="\033[38;5;99m │ ${R}"
 
-# -- Update check (cache 1h, async) --
+# -- Update check (cache 2min, sync on stale/missing) --
 UPDATE_CACHE="$HOME/.claude/.statusline-latest-version"
 UPDATE_TTL=120  # 2 minutes en secondes (max ~30 req/h, GitHub autorise 60/h)
 update_part=""
@@ -58,16 +58,17 @@ if [ -f "$UPDATE_CACHE" ]; then
   now=$(date +%s)
   age=$(( now - ${cached_ts:-0} ))
 
-  # Si le cache a expiré, relancer un check en arrière-plan
+  # Si le cache a expiré, check synchrone pour afficher dès le premier rendu
   if [ "$age" -ge "$UPDATE_TTL" ]; then
-    _check_update_remote &
-    disown 2>/dev/null
+    _check_update_remote
+    # Relire le cache mis à jour
+    IFS='|' read -r cached_version cached_ts < "$UPDATE_CACHE" 2>/dev/null
   fi
 else
-  # Pas de cache : premier lancement, check en arrière-plan
+  # Pas de cache : premier lancement, check synchrone
   cached_version=""
-  _check_update_remote &
-  disown 2>/dev/null
+  _check_update_remote
+  IFS='|' read -r cached_version cached_ts < "$UPDATE_CACHE" 2>/dev/null
 fi
 
 # Comparer les versions (sémantique simple a.b.c)

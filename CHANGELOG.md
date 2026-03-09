@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- Vérification des mises à jour synchrone au démarrage quand le cache est expiré ou absent (l'indicateur `⬆` s'affiche dès le premier rendu au lieu du deuxième)
+
 ## 1.7.0
 
 - Nouvelle ligne `📡 Statusline` dédiée à la version de la statusline et aux notifications de mise à jour
