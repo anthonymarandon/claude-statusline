@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.0
+
+- Commande `/statusline-uninstall` : désinstallation complète de la statusline en une seule commande
+- Script `uninstall.sh` : supprime tous les fichiers, skills, cache et retire la clé `statusLine` de `settings.json` (sans toucher au reste de la configuration)
+- Confirmation obligatoire avant suppression (irréversible)
+- `install.sh` et `update.sh` installent et mettent à jour automatiquement le skill et le script de désinstallation
+
 ## 1.8.0
 
 - Indicateur git dirty : un `●` orange apparaît après la branche quand il y a des modifications non commitées

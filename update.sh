@@ -38,9 +38,11 @@ echo -e "${DIM}Téléchargement des fichiers...${R}"
 FILES=(
   "statusline-command.sh"
   "update.sh"
+  "uninstall.sh"
   "skills/session-info/SKILL.md"
   "skills/statusline-update/SKILL.md"
   "skills/statusline-help/SKILL.md"
+  "skills/statusline-uninstall/SKILL.md"
 )
 
 errors=0
@@ -59,6 +61,7 @@ done
 # Rendre les scripts exécutables
 chmod +x "$DEST/statusline-command.sh" 2>/dev/null
 chmod +x "$DEST/update.sh" 2>/dev/null
+chmod +x "$DEST/uninstall.sh" 2>/dev/null
 
 # Récupérer la nouvelle version
 NEW_VERSION=$(grep -m1 'STATUSLINE_VERSION=' "$DEST/statusline-command.sh" 2>/dev/null | cut -d'"' -f2 || echo "inconnu")

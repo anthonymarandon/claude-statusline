@@ -134,6 +134,14 @@ else
   changes+=("  ${YELLOW}~/.claude/skills/statusline-help/SKILL.md${R} sera créé (commande ${BOLD}/statusline-help${R})")
 fi
 
+UNINSTALL_SKILL_DEST="$HOME/.claude/skills/statusline-uninstall/SKILL.md"
+UNINSTALL_SCRIPT_DEST="$HOME/.claude/uninstall.sh"
+if [ -f "$UNINSTALL_SKILL_DEST" ]; then
+  changes+=("  ${YELLOW}~/.claude/skills/statusline-uninstall/SKILL.md${R} sera mis à jour")
+else
+  changes+=("  ${YELLOW}~/.claude/skills/statusline-uninstall/SKILL.md${R} sera créé (commande ${BOLD}/statusline-uninstall${R})")
+fi
+
 if [ -f "$UPDATE_SCRIPT_DEST" ]; then
   changes+=("  ${YELLOW}~/.claude/update.sh${R} sera mis à jour")
 else
@@ -211,6 +219,16 @@ else
   echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-help (non bloquant)"
 fi
 
+# Installer le skill /statusline-uninstall
+UNINSTALL_SKILL_URL="$REPO_BASE/skills/statusline-uninstall/SKILL.md"
+mkdir -p "$HOME/.claude/skills/statusline-uninstall"
+
+if curl -fsSL "$UNINSTALL_SKILL_URL" -o "$UNINSTALL_SKILL_DEST"; then
+  echo -e "${GREEN}✓${R} Commande /statusline-uninstall installée"
+else
+  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-uninstall (non bloquant)"
+fi
+
 # Installer le script de mise à jour
 UPDATE_SCRIPT_URL="$REPO_BASE/update.sh"
 
@@ -221,12 +239,23 @@ else
   echo -e "${YELLOW}⚠${R}  Impossible de télécharger le script de mise à jour (non bloquant)"
 fi
 
+# Installer le script de désinstallation
+UNINSTALL_SCRIPT_URL="$REPO_BASE/uninstall.sh"
+
+if curl -fsSL "$UNINSTALL_SCRIPT_URL" -o "$UNINSTALL_SCRIPT_DEST"; then
+  chmod +x "$UNINSTALL_SCRIPT_DEST"
+  echo -e "${GREEN}✓${R} Script de désinstallation installé"
+else
+  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le script de désinstallation (non bloquant)"
+fi
+
 # Terminé
 echo ""
 echo -e "${GREEN}=== Installation terminée ! ===${R}"
 echo ""
 echo "Relancez Claude Code pour voir votre nouvelle statusline."
 echo ""
-echo -e "Mises à jour : tapez ${BOLD}/statusline-update${R} dans Claude Code"
-echo -e "ou lancez directement : ${CYAN}bash ~/.claude/update.sh${R}"
+echo -e "Mises à jour :    tapez ${BOLD}/statusline-update${R} dans Claude Code"
+echo -e "Désinstallation : tapez ${BOLD}/statusline-uninstall${R} dans Claude Code"
+echo -e "ou lancez directement : ${CYAN}bash ~/.claude/update.sh${R} / ${CYAN}bash ~/.claude/uninstall.sh${R}"
 echo ""

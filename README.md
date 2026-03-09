@@ -58,6 +58,12 @@ Tapez `/statusline-help` dans Claude Code pour obtenir une **explication visuell
 
 Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la statusline sans quitter votre session.
 
+### Commande `/statusline-uninstall`
+
+Tapez `/statusline-uninstall` dans Claude Code pour **désinstaller complètement** la statusline. Le script supprime tous les fichiers associés (scripts, skills, cache) et retire la clé `statusLine` de `settings.json` sans toucher au reste de votre configuration.
+
+> Une confirmation est demandée avant toute suppression.
+
 ---
 
 ## :bar_chart: Fonctionnalités

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.8.0"
+STATUSLINE_VERSION="1.9.0"
 
 # Vérifier que jq est disponible
 if ! command -v jq &>/dev/null; then
