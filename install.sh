@@ -157,20 +157,34 @@ if [ ${#changes[@]} -gt 0 ]; then
   fi
 fi
 
-# Télécharger le script
-SCRIPT_URL="$REPO_BASE/statusline-command.sh"
+# Fonction de téléchargement réutilisable
+# Usage: _download_file "url_relative" "destination" "label" [critical]
+# Si critical=1, le script quitte en cas d'échec
+_download_file() {
+  local url="$REPO_BASE/$1" dest="$2" label="$3" critical="${4:-0}"
+  mkdir -p "$(dirname "$dest")"
+  if curl -fsSL "$url" -o "$dest"; then
+    case "$dest" in *.sh) chmod +x "$dest" ;; esac
+    echo -e "${GREEN}✓${R} $label"
+  elif [ "$critical" = "1" ]; then
+    echo -e "${RED}Erreur : impossible de télécharger $label.${R}"
+    echo -e "${DIM}URL : $url${R}"
+    exit 1
+  else
+    echo -e "${YELLOW}⚠${R}  Impossible de télécharger $label (non bloquant)"
+  fi
+}
 
+# Télécharger les fichiers
 echo -e "${GREEN}→ Installation de la statusline${R}"
 echo -e "${DIM}  Téléchargement depuis GitHub...${R}"
 
-if ! curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_DEST"; then
-  echo -e "${RED}Erreur : impossible de télécharger le script.${R}"
-  echo -e "${DIM}URL : $SCRIPT_URL${R}"
-  exit 1
-fi
-
-chmod +x "$SCRIPT_DEST"
-echo -e "${GREEN}✓${R} Script installé dans ~/.claude/statusline-command.sh"
+_download_file "statusline-command.sh" "$SCRIPT_DEST" "Script statusline" 1
+_download_file "update.sh" "$UPDATE_SCRIPT_DEST" "Script de mise à jour"
+_download_file "uninstall.sh" "$UNINSTALL_SCRIPT_DEST" "Script de désinstallation"
+_download_file "skills/statusline-update/SKILL.md" "$UPDATE_SKILL_DEST" "Commande /statusline-update"
+_download_file "skills/statusline-help/SKILL.md" "$HELP_SKILL_DEST" "Commande /statusline-help"
+_download_file "skills/statusline-uninstall/SKILL.md" "$UNINSTALL_SKILL_DEST" "Commande /statusline-uninstall"
 
 # Configurer settings.json
 if [ -f "$SETTINGS" ]; then
@@ -180,56 +194,6 @@ if [ -f "$SETTINGS" ]; then
 else
   echo "{\"statusLine\":$STATUSLINE_CONFIG}" | jq '.' > "$SETTINGS"
   echo -e "${GREEN}✓${R} settings.json créé"
-fi
-
-# Installer le skill /statusline-update
-UPDATE_SKILL_URL="$REPO_BASE/skills/statusline-update/SKILL.md"
-mkdir -p "$HOME/.claude/skills/statusline-update"
-
-if curl -fsSL "$UPDATE_SKILL_URL" -o "$UPDATE_SKILL_DEST"; then
-  echo -e "${GREEN}✓${R} Commande /statusline-update installée"
-else
-  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-update (non bloquant)"
-fi
-
-# Installer le skill /statusline-help
-HELP_SKILL_URL="$REPO_BASE/skills/statusline-help/SKILL.md"
-mkdir -p "$HOME/.claude/skills/statusline-help"
-
-if curl -fsSL "$HELP_SKILL_URL" -o "$HELP_SKILL_DEST"; then
-  echo -e "${GREEN}✓${R} Commande /statusline-help installée"
-else
-  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-help (non bloquant)"
-fi
-
-# Installer le skill /statusline-uninstall
-UNINSTALL_SKILL_URL="$REPO_BASE/skills/statusline-uninstall/SKILL.md"
-mkdir -p "$HOME/.claude/skills/statusline-uninstall"
-
-if curl -fsSL "$UNINSTALL_SKILL_URL" -o "$UNINSTALL_SKILL_DEST"; then
-  echo -e "${GREEN}✓${R} Commande /statusline-uninstall installée"
-else
-  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /statusline-uninstall (non bloquant)"
-fi
-
-# Installer le script de mise à jour
-UPDATE_SCRIPT_URL="$REPO_BASE/update.sh"
-
-if curl -fsSL "$UPDATE_SCRIPT_URL" -o "$UPDATE_SCRIPT_DEST"; then
-  chmod +x "$UPDATE_SCRIPT_DEST"
-  echo -e "${GREEN}✓${R} Script de mise à jour installé"
-else
-  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le script de mise à jour (non bloquant)"
-fi
-
-# Installer le script de désinstallation
-UNINSTALL_SCRIPT_URL="$REPO_BASE/uninstall.sh"
-
-if curl -fsSL "$UNINSTALL_SCRIPT_URL" -o "$UNINSTALL_SCRIPT_DEST"; then
-  chmod +x "$UNINSTALL_SCRIPT_DEST"
-  echo -e "${GREEN}✓${R} Script de désinstallation installé"
-else
-  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le script de désinstallation (non bloquant)"
 fi
 
 # Terminé

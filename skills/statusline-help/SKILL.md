@@ -19,7 +19,8 @@ Commence par afficher un exemple visuel de la statusline telle qu'elle apparaît
 ⚡ API        🔥65% │ 45m12s
 ✎ Tokens     8.3k
 📊 Contexte   ████░░░░░░ 40%
-📡 Statusline v1.7.0  ⬆ v1.7.0 dispo
+📡 Statusline v2.0.0  ⬆ v2.0.0 dispo
+💬 Conseil    ✨ Session efficace et économique
 ```
 
 Puis explique chaque ligne :
@@ -65,6 +66,15 @@ Cette ligne n'apparaît que si des tokens ont été générés.
 ### 📡 Statusline
 La version actuelle de la statusline installée. Si une mise à jour est disponible, un indicateur vert `⬆ vX.X.X dispo` apparaît à côté.
 - C'est bien une mise à jour de **la statusline**, pas du modèle Claude ni du CLI.
+
+### 💬 Conseil
+Un message contextuel qui change dynamiquement selon l'état de votre session. Il analyse le coût, la durée, le ratio API, le contexte et les lignes modifiées pour afficher un conseil adapté. Exemples :
+- 🚀 **Très productif !** — beaucoup de code modifié pour un coût raisonnable
+- ⚠️ **Pensez à démarrer une nouvelle session** — coût élevé ou contexte saturé
+- 🛑 **+2h de session** — session trop longue, nouvelle session conseillée
+- 😴 **Session calme** — peu d'activité pour le moment
+- ✨ **Session efficace et économique** — tout va bien
+- 💚 **Session très économique** — coût minimal
 
 ### 📊 Contexte
 La barre de progression du contexte — combien de la fenêtre de contexte est utilisée.

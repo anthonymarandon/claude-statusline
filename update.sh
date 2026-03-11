@@ -29,11 +29,15 @@ fi
 # Récupérer la version actuelle avant mise à jour
 OLD_VERSION="inconnu"
 if [ -f "$DEST/statusline-command.sh" ]; then
-  OLD_VERSION=$(grep -m1 'STATUSLINE_VERSION=' "$DEST/statusline-command.sh" 2>/dev/null | cut -d'"' -f2 || echo "inconnu")
+  _raw=$(grep -m1 'STATUSLINE_VERSION=' "$DEST/statusline-command.sh" 2>/dev/null | cut -d'"' -f2)
+  [[ "$_raw" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && OLD_VERSION="$_raw" || OLD_VERSION="inconnu"
 fi
 
-# Télécharger les fichiers
+# Télécharger les fichiers dans un dossier temporaire (rollback si échec)
 echo -e "${DIM}Téléchargement des fichiers...${R}"
+
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
 
 FILES=(
   "statusline-command.sh"
@@ -46,35 +50,38 @@ FILES=(
 
 errors=0
 for file in "${FILES[@]}"; do
-  dir=$(dirname "$DEST/$file")
-  mkdir -p "$dir"
-
-  tmpfile=$(mktemp "$DEST/.statusline-update-XXXXXX")
-  if curl -fsSL "$REPO_BASE/$file" -o "$tmpfile" 2>/dev/null; then
-    mv -f "$tmpfile" "$DEST/$file"
-    # Rendre exécutable immédiatement si c'est un script
-    case "$file" in *.sh) chmod +x "$DEST/$file" 2>/dev/null ;; esac
+  mkdir -p "$(dirname "$TMPDIR/$file")"
+  if curl -fsSL "$REPO_BASE/$file" -o "$TMPDIR/$file" 2>/dev/null; then
     echo -e "${GREEN}✓${R} $file"
   else
-    rm -f "$tmpfile" 2>/dev/null
     echo -e "${RED}✗${R} $file (échec)"
     errors=$((errors + 1))
   fi
 done
 
+echo ""
+if [ "$errors" -gt 0 ]; then
+  echo -e "${RED}Mise à jour annulée : $errors fichier(s) en erreur.${R}"
+  echo "Aucun fichier n'a été modifié."
+  exit 1
+fi
+
+# Tous les téléchargements ont réussi — déplacer d'un coup
+for file in "${FILES[@]}"; do
+  mkdir -p "$(dirname "$DEST/$file")"
+  mv -f "$TMPDIR/$file" "$DEST/$file"
+  case "$file" in *.sh) chmod +x "$DEST/$file" 2>/dev/null ;; esac
+done
+
 # Récupérer la nouvelle version
-NEW_VERSION=$(grep -m1 'STATUSLINE_VERSION=' "$DEST/statusline-command.sh" 2>/dev/null | cut -d'"' -f2 || echo "inconnu")
+_raw=$(grep -m1 'STATUSLINE_VERSION=' "$DEST/statusline-command.sh" 2>/dev/null | cut -d'"' -f2)
+[[ "$_raw" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && NEW_VERSION="$_raw" || NEW_VERSION="inconnu"
 
 # Réinitialiser le cache de version pour refléter la mise à jour
 rm -f "$DEST/.statusline-latest-version" 2>/dev/null
 
-echo ""
-if [ "$errors" -eq 0 ]; then
-  echo -e "${GREEN}=== Mise à jour terminée ! ===${R}"
-  echo -e "  ${DIM}${OLD_VERSION}${R} → ${BOLD}${NEW_VERSION}${R}"
-else
-  echo -e "${RED}Mise à jour partielle : $errors fichier(s) en erreur.${R}"
-fi
+echo -e "${GREEN}=== Mise à jour terminée ! ===${R}"
+echo -e "  ${DIM}${OLD_VERSION}${R} → ${BOLD}${NEW_VERSION}${R}"
 echo ""
 echo "Relancez Claude Code pour appliquer les changements."
 echo ""

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.0
+
+- Fix : validation après parsing jq — affiche "⚠ Statusline : données indisponibles" si le JSON est malformé
+- Fix : fichier debug déplacé vers `~/.claude/.statusline-debug.json` avec permissions `600` (plus de leak dans `/tmp/`)
+- Fix : désinstallation sécurisée — terminal interactif obligatoire, timeout 30s, plus de fallback stdin
+- Fix : validation semver (`X.Y.Z`) avant toute comparaison de versions
+- Fix : vérification de `git` avant utilisation des commandes git
+- Perf : 17 appels `awk` réduits à 2 — comparaisons via arithmétique bash native (centièmes)
+- Refactor : patterns curl factorisés dans `_download_file` (`install.sh`)
+- Feat : mise à jour atomique avec rollback — tous les fichiers sont téléchargés dans un dossier temporaire avant déplacement (`update.sh`)
+- Feat : détection des capacités couleur du terminal (`NO_COLOR`, `TERM=dumb`, fallback 8 couleurs ANSI)
+- Docs : ajout des messages contextuels dans le help et le README
+- Docs : suppression de la section `/session-info` du README (supprimé en v2.0.0)
+- Docs : section troubleshooting ajoutée au README
+- Docs : chemin debug mis à jour dans le README
+
 ## 2.0.0
 
 - Nouvelle ligne `💬 Conseil` : messages contextuels automatiques basés sur l'activité de la session

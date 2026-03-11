@@ -38,17 +38,7 @@ bash ~/.claude/update.sh
 
 ---
 
-## :speech_balloon: Commande `/session-info`
-
-L'installation inclut automatiquement la commande `/session-info`. Tapez-la dans Claude Code pour obtenir un **résumé en langage naturel** de votre session :
-
-- Quel modèle vous utilisez
-- Combien la session a coûté
-- L'utilisation de la fenêtre de contexte
-- Les lignes modifiées, tokens générés, ratio API
-- Des alertes si le contexte ou le coût deviennent critiques
-
-> Claude lit les données de sa propre statusline et vous les explique.
+## :speech_balloon: Commandes
 
 ### Commande `/statusline-help`
 
@@ -82,6 +72,7 @@ Tapez `/statusline-uninstall` dans Claude Code pour **désinstaller complètemen
 | :rotating_light: Alerte > 75% | Fond rouge quand le contexte se remplit |
 | :warning: Alerte > 200k | Avertissement clignotant si la fenêtre explose |
 | :arrow_up: Mise à jour | Indicateur vert quand une nouvelle version est disponible |
+| :speech_balloon: Message contextuel | Conseil dynamique selon l'état de la session |
 | :grey_question: `/statusline-help` | Explique chaque indicateur de la statusline |
 
 ### :dollar: Coût dynamique
@@ -103,6 +94,19 @@ Le pourcentage du temps passé à **attendre les réponses de Claude** par rappo
 | :seedling: | :green_circle: Vert | ≤ 40% | Session économe |
 | :zap: | :yellow_circle: Jaune | 40–70% | Échange actif |
 | :fire: | :orange_circle: Orange | > 70% | Claude travaille en continu |
+
+### :speech_balloon: Messages contextuels
+
+La ligne `💬 Conseil` affiche un message dynamique qui s'adapte à l'état de votre session. Le message est choisi automatiquement selon le coût, la durée, le ratio API, le remplissage du contexte et les lignes modifiées.
+
+| Exemple | Condition |
+|---|---|
+| 🚀 Très productif ! | +100 lignes modifiées, coût < 2$ |
+| ⚠️ Pensez à démarrer une nouvelle session | Coût > 3$ ou contexte > 75% |
+| 🛑 +2h de session | Durée > 2h |
+| 😴 Session calme | Peu d'activité |
+| ✨ Session efficace et économique | Coût < 1$, API ≤ 40%, durée < 15min |
+| 💚 Session très économique | Coût < 0.50$ |
 
 ---
 
@@ -142,7 +146,7 @@ C_DEL="\033[1;38;5;208m"   # Lignes supprimées — orange
 Le JSON reçu de Claude Code est sauvegardé automatiquement :
 
 ```bash
-cat /tmp/claude-statusline-input.json
+cat ~/.claude/.statusline-debug.json
 ```
 
 <details>
@@ -173,6 +177,70 @@ Si votre système utilise la virgule comme séparateur décimal, le formatage de
 ```bash
 echo "$cost_usd" | LANG=C awk '{printf "%.4f", $1}'
 ```
+
+---
+
+## :wrench: Troubleshooting
+
+<details>
+<summary><strong>La statusline ne s'affiche pas</strong></summary>
+
+1. Vérifiez que `~/.claude/settings.json` contient bien la clé `statusLine` :
+   ```bash
+   cat ~/.claude/settings.json | jq '.statusLine'
+   ```
+2. Vérifiez que le script existe et est exécutable :
+   ```bash
+   ls -la ~/.claude/statusline-command.sh
+   ```
+3. Relancez Claude Code après l'installation.
+
+</details>
+
+<details>
+<summary><strong>Erreur de parsing JSON / "données indisponibles"</strong></summary>
+
+1. Vérifiez que `jq` est installé : `jq --version`
+2. Inspectez le dernier JSON reçu :
+   ```bash
+   cat ~/.claude/.statusline-debug.json
+   ```
+3. Si le fichier est vide ou absent, le problème vient de l'entrée envoyée par Claude Code.
+
+</details>
+
+<details>
+<summary><strong>Couleurs absentes ou caractères bizarres</strong></summary>
+
+- Si votre terminal ne supporte pas les 256 couleurs, la statusline bascule automatiquement en 8 couleurs basiques.
+- Si vous utilisez `NO_COLOR=1` ou `TERM=dumb`, les couleurs sont désactivées (convention [no-color.org](https://no-color.org/)).
+- Vérifiez le support couleur : `tput colors` (doit afficher `256` ou plus).
+
+</details>
+
+<details>
+<summary><strong>Problèmes de permissions</strong></summary>
+
+Les scripts doivent être exécutables :
+```bash
+chmod +x ~/.claude/statusline-command.sh ~/.claude/update.sh ~/.claude/uninstall.sh
+```
+
+Le fichier de debug doit être en permissions `600` :
+```bash
+ls -la ~/.claude/.statusline-debug.json
+```
+
+</details>
+
+<details>
+<summary><strong>La mise à jour échoue</strong></summary>
+
+1. Vérifiez votre connexion internet
+2. Testez l'accès à GitHub : `curl -sf https://api.github.com/repos/anthonymarandon/claude-statusline/tags?per_page=1 | jq '.[0].name'`
+3. En cas d'échec partiel, aucun fichier n'est modifié (rollback automatique). Réessayez plus tard.
+
+</details>
 
 ---
 

@@ -1,123 +1,71 @@
-# Amélioration Statusline — Messages contextuels
+# Améliorations Statusline — Audit global
 
-## Concept
+## Priorité haute
 
-Remplacer le skill "coach humoristique" (`/session-info`) par des **messages contextuels courts** affichés directement dans la statusline. Le message s'adapte automatiquement en fonction de l'activité de la session (coût, API, durée, lignes, contexte).
+### 1. ✅ Gestion d'erreur après le parsing jq
+- **Fichier** : `statusline-command.sh` (lignes 23-36)
+- **Problème** : si le JSON reçu est malformé, `eval` échoue silencieusement et toutes les variables (`model`, `cwd`, `cost_usd`...) restent vides. Le script continue et produit un affichage cassé.
+- **Solution** : ajouter une validation après l'`eval` pour vérifier que les variables critiques sont définies, avec un fallback vers un affichage minimal (ex: "Statusline : données indisponibles").
 
-Une seule ligne de message, visible en permanence, sans avoir à invoquer un skill.
+### 2. ✅ Fichier temporaire non nettoyé et trop permissif
+- **Fichier** : `statusline-command.sh` (ligne 21)
+- **Problème** : `/tmp/claude-statusline-input.json` est écrit à chaque rendu, jamais supprimé, et lisible par tous les utilisateurs du système (potentiel leak de chemins de travail).
+- **Solution** : déplacer vers `~/.claude/.statusline-debug.json` avec permissions `600`, ou ajouter un `trap` de nettoyage en sortie de script.
 
----
+### 3. ✅ Confirmation de désinstallation fragile
+- **Fichier** : `uninstall.sh` (ligne 71)
+- **Problème** : `read -r confirm < /dev/tty 2>/dev/null || read -r confirm` — si `/dev/tty` est absent (environnement automatisé, pipe), le fallback sur stdin pourrait lire une entrée non voulue et déclencher la suppression.
+- **Solution** : n'accepter que `/dev/tty`, et quitter avec un message d'erreur si indisponible. Ajouter un timeout au `read`.
 
-## Données disponibles
-
-| Variable        | Description                        |
-|-----------------|------------------------------------|
-| `cost_usd`      | Coût total de la session en $      |
-| `api_pct`        | Ratio API (temps Claude / total)   |
-| `total_sec`      | Durée totale de la session         |
-| `lines_added`    | Lignes ajoutées                    |
-| `lines_removed`  | Lignes supprimées                  |
-| `pct`            | Contexte utilisé (%)               |
-| `exceeds_200k`   | Tokens > 200k (compression)        |
-| `git_dirty`      | Modifications non commitées        |
-
----
-
-## Scénarios proposés
-
-### 1. Coût de la session
-
-| Condition           | Message                                                |
-|---------------------|--------------------------------------------------------|
-| cost < 0.50$        | `💚 Session très économique`                           |
-| 0.50$ <= cost < 1$  | `✅ Budget maîtrisé`                                   |
-| 1$ <= cost < 3$     | `💰 Session bien chargée`                              |
-| 3$ <= cost < 5$     | `⚠️ Pensez à démarrer une nouvelle session bientôt`    |
-| cost >= 5$          | `🔴 Session coûteuse — nouvelle session recommandée`   |
-
-### 2. Ratio API (intensité d'utilisation)
-
-| Condition           | Message                                                |
-|---------------------|--------------------------------------------------------|
-| api_pct <= 30%      | `🌿 Utilisation tranquille`                            |
-| 30% < api_pct <= 50%| `⚡ Rythme soutenu`                                    |
-| 50% < api_pct <= 70%| `🔥 Claude est au charbon`                             |
-| api_pct > 70%       | `🚨 Usage très intensif — laissez Claude respirer`     |
-
-### 3. Durée de session
-
-| Condition              | Message                                             |
-|------------------------|-----------------------------------------------------|
-| durée < 10 min         | `🟢 Session fraîche`                                |
-| 10 min <= durée < 30m  | `👍 Bon rythme de travail`                          |
-| 30 min <= durée < 1h   | `☕ Pensez à faire une pause`                       |
-| 1h <= durée < 2h       | `⏰ Session longue — pause recommandée`             |
-| durée >= 2h            | `🛑 +2h de session — nouvelle session conseillée`   |
-
-### 4. Contexte (fenêtre de tokens)
-
-| Condition           | Message                                                |
-|---------------------|--------------------------------------------------------|
-| pct <= 40%          | `📦 Contexte large, tout va bien`                      |
-| 40% < pct <= 65%    | `📊 Contexte en cours de remplissage`                  |
-| 65% < pct <= 80%    | `⚠️ Contexte chargé — concluez bientôt`               |
-| pct > 80%           | `🔴 Contexte critique — nouvelle session recommandée`  |
-| exceeds_200k        | `💥 Compression active — qualité dégradée`             |
+### 4. ✅ Validation de version absente
+- **Fichiers** : `statusline-command.sh` (lignes 87-96), `update.sh` (lignes 32, 67)
+- **Problème** : la comparaison de versions ne vérifie jamais que la chaîne extraite est du semver valide. Un format inattendu (ex: `"2.0"`, `"beta"`, chaîne vide) casserait la comparaison arithmétique silencieusement.
+- **Solution** : valider le format avec un test regex `^[0-9]+\.[0-9]+\.[0-9]+$` avant la comparaison.
 
 ---
 
-## Scénarios combinés (prioritaires)
+## Priorité moyenne
 
-L'idée est de combiner les facteurs pour générer un message **plus pertinent** qu'un seul indicateur.
+### 5. ✅ Documentation pas à jour avec la v2.0.0
+- **Fichiers** : `skills/statusline-help/SKILL.md`, `README.md`
+- **Problème** : le skill `/statusline-help` ne mentionne pas la nouvelle ligne `💬 Conseil` (messages contextuels). Le README ne documente pas cette fonctionnalité non plus. Les exemples de version dans le help montrent encore `v1.7.0`.
+- **Solution** : ajouter une section sur les messages contextuels dans le help et le README, mettre à jour les exemples.
 
-### Session efficace (priorité basse — message positif)
-- **Conditions** : cost < 1$ ET api_pct <= 40% ET durée < 15 min
-- **Message** : `✨ Session efficace et économique`
+### 6. ✅ Performances : 14+ appels awk par rendu
+- **Fichier** : `statusline-command.sh`
+- **Problème** : chaque comparaison numérique (coût, API, durée) lance un sous-processus awk. Sur un rendu fréquent, ça représente 14+ forks par affichage.
+- **Solution** : utiliser l'arithmétique bash native quand possible (multiplier par 100 pour éviter les décimaux), ou regrouper les comparaisons dans un seul appel awk qui retourne tous les flags d'un coup.
 
-### Session tranquille (peu d'activité)
-- **Conditions** : durée > 10 min ET cost < 0.50$ ET api_pct < 20% ET lines_added < 20
-- **Message** : `😴 Session calme — peu d'activité pour le moment`
+### 7. ✅ Patterns curl dupliqués dans l'installateur
+- **Fichier** : `install.sh`
+- **Problème** : 7 blocs quasi identiques de `curl -fsSL ... -o ...` avec `mkdir -p` + message de succès/échec. Code répétitif et difficile à maintenir.
+- **Solution** : extraire dans une fonction `_download_file "$url" "$dest" "$label"` réutilisable.
 
-### Session productive
-- **Conditions** : lines_added > 100 ET cost < 2$
-- **Message** : `🚀 Très productif ! Bon ratio coût/code`
-
-### Session en surchauffe
-- **Conditions** : cost > 3$ ET api_pct > 60%
-- **Message** : `🔥 Session intensive — pensez à une nouvelle session`
-
-### Contexte en danger
-- **Conditions** : pct > 75% ET cost > 2$
-- **Message** : `⛔ Contexte saturé + coût élevé — nouvelle session fortement conseillée`
-
-### Marathon sans commit
-- **Conditions** : durée > 30 min ET git_dirty == true ET lines_added > 50
-- **Message** : `💾 Beaucoup de modifs non commitées — pensez à sauvegarder`
-
-### Session longue mais légère
-- **Conditions** : durée > 30 min ET cost < 0.50$ ET api_pct < 20%
-- **Message** : `🐢 Session longue mais peu active — tout va bien`
+### 8. ✅ Mise à jour partielle sans rollback
+- **Fichier** : `update.sh`
+- **Problème** : si 3 fichiers sur 6 échouent au téléchargement, les fichiers déjà mis à jour restent en place. Le système est dans un état incohérent (mix de versions).
+- **Solution** : télécharger tous les fichiers dans un dossier temporaire, puis tout déplacer d'un coup si tout a réussi. En cas d'échec, ne rien modifier.
 
 ---
 
-## Priorité d'affichage
+## Priorité basse
 
-Si plusieurs conditions sont remplies, quelle règle afficher ? Proposition d'ordre de priorité (du plus urgent au moins urgent) :
+### 9. ✅ Pas de détection des capacités couleur du terminal
+- **Fichier** : `statusline-command.sh`
+- **Problème** : les codes ANSI 256 couleurs sont utilisés sans vérifier le support du terminal. Certains terminaux SSH, Windows CMD, ou `TERM=dumb` ne les supportent pas.
+- **Solution** : vérifier la variable `NO_COLOR` (convention standard) et `TERM`, avec fallback vers des couleurs ANSI basiques (8 couleurs).
 
-1. **Contexte critique** (pct > 80% ou exceeds_200k)
-2. **Session en surchauffe** (coût + API élevés)
-3. **Marathon sans commit** (git dirty + temps + lignes)
-4. **Coût élevé seul** (cost >= 3$)
-5. **Durée longue seule** (>= 1h)
-6. **Scénarios combinés positifs** (efficace, productif)
-7. **Scénarios par défaut** (indicateur simple le plus pertinent)
+### 10. ✅ Pas de vérification de git avant utilisation
+- **Fichier** : `statusline-command.sh` (lignes 104-109)
+- **Problème** : les commandes `git -C` sont exécutées sans vérifier que `git` est installé. Sur un système sans git, les erreurs sont supprimées mais le check est inutile.
+- **Solution** : ajouter `command -v git &>/dev/null` avant le bloc git.
 
----
+### 11. ✅ Section troubleshooting manquante dans le README
+- **Fichier** : `README.md`
+- **Problème** : pas de guide pour les problèmes courants (couleurs absentes, JSON parse error, statusline qui ne s'affiche pas, permissions).
+- **Solution** : ajouter une section FAQ/Troubleshooting avec les cas les plus fréquents.
 
-## Questions ouvertes
-
-- [ ] Faut-il afficher le message sur une ligne séparée ou intégré dans la statusline existante ?
-- [ ] Faut-il un emoji ou garder un style sobre ?
-- [ ] Limiter à un seul message ou empiler 2 messages max ?
-- [ ] Ajouter un seuil "lignes supprimées" ? (ex: > 100 lignes supprimées = "gros refactoring en cours")
-- [ ] Faut-il un message par défaut quand tout est normal, ou ne rien afficher ?
+### 12. ✅ Nettoyage du fichier de brainstorming
+- **Fichier** : `amelioration-statusline.md` (ce fichier)
+- **Problème** : l'ancien contenu (scénarios de messages contextuels) est maintenant implémenté en v2.0.0. Les questions ouvertes sont résolues.
+- **Statut** : ✅ Remplacé par cet audit.

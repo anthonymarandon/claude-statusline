@@ -53,8 +53,9 @@ feat(statusline): ajout du layout responsive
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
-## Étape 3 : Commit, tag et push
+## Étape 3 : Changelog, commit, tag et push
 
+- **Mettre à jour `CHANGELOG.md`** avec les changements de cette version (obligatoire si la version a changé)
 - Ajouter les fichiers modifiés au staging (`git add` par fichier, jamais `git add .` ou `-A`)
 - Créer le commit
 - **Créer un tag annoté** sur le commit avec la version correspondante (ex: `git tag -a v2.0.0 -m "v2.0.0 — description courte"`)

@@ -65,9 +65,15 @@ if [ -f "$DEST/settings.json" ] && command -v jq &> /dev/null && jq -e '.statusL
 fi
 echo ""
 
-# Confirmation
-echo -e "${RED}Cette action est irréversible.${R} Continuer ? (o/N)"
-read -r confirm < /dev/tty 2>/dev/null || read -r confirm
+# Confirmation (terminal interactif obligatoire)
+if ! exec 3< /dev/tty 2>/dev/null; then
+  echo -e "${RED}Erreur : aucun terminal interactif détecté.${R}"
+  echo "La désinstallation nécessite une confirmation manuelle."
+  exit 1
+fi
+echo -e "${RED}Cette action est irréversible.${R} Continuer ? (o/N) [timeout 30s]"
+read -r -t 30 confirm <&3 || confirm=""
+exec 3<&-
 if [[ "$confirm" != "o" && "$confirm" != "O" && "$confirm" != "oui" && "$confirm" != "Oui" ]]; then
   echo ""
   echo -e "${YELLOW}Désinstallation annulée.${R}"
