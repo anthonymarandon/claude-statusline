@@ -97,7 +97,6 @@ SCRIPT_DEST="$HOME/.claude/statusline-command.sh"
 STATUSLINE_CONFIG='{"type":"command","command":"bash ~/.claude/statusline-command.sh"}'
 changes=()
 
-SKILL_DEST="$HOME/.claude/skills/session-info/SKILL.md"
 UPDATE_SKILL_DEST="$HOME/.claude/skills/statusline-update/SKILL.md"
 UPDATE_SCRIPT_DEST="$HOME/.claude/update.sh"
 
@@ -113,12 +112,6 @@ if [ -f "$SETTINGS" ]; then
   fi
 else
   changes+=("  ${YELLOW}~/.claude/settings.json${R} sera créé")
-fi
-
-if [ -f "$SKILL_DEST" ]; then
-  changes+=("  ${YELLOW}~/.claude/skills/session-info/SKILL.md${R} sera mis à jour")
-else
-  changes+=("  ${YELLOW}~/.claude/skills/session-info/SKILL.md${R} sera créé (commande ${BOLD}/session-info${R})")
 fi
 
 if [ -f "$UPDATE_SKILL_DEST" ]; then
@@ -187,16 +180,6 @@ if [ -f "$SETTINGS" ]; then
 else
   echo "{\"statusLine\":$STATUSLINE_CONFIG}" | jq '.' > "$SETTINGS"
   echo -e "${GREEN}✓${R} settings.json créé"
-fi
-
-# Installer le skill /session-info
-SKILL_URL="$REPO_BASE/skills/session-info/SKILL.md"
-mkdir -p "$HOME/.claude/skills/session-info"
-
-if curl -fsSL "$SKILL_URL" -o "$SKILL_DEST"; then
-  echo -e "${GREEN}✓${R} Commande /session-info installée"
-else
-  echo -e "${YELLOW}⚠${R}  Impossible de télécharger le skill /session-info (non bloquant)"
 fi
 
 # Installer le skill /statusline-update

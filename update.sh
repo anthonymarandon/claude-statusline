@@ -39,7 +39,6 @@ FILES=(
   "statusline-command.sh"
   "update.sh"
   "uninstall.sh"
-  "skills/session-info/SKILL.md"
   "skills/statusline-update/SKILL.md"
   "skills/statusline-help/SKILL.md"
   "skills/statusline-uninstall/SKILL.md"
@@ -50,18 +49,18 @@ for file in "${FILES[@]}"; do
   dir=$(dirname "$DEST/$file")
   mkdir -p "$dir"
 
-  if curl -fsSL "$REPO_BASE/$file" -o "$DEST/$file" 2>/dev/null; then
+  tmpfile=$(mktemp "$DEST/.statusline-update-XXXXXX")
+  if curl -fsSL "$REPO_BASE/$file" -o "$tmpfile" 2>/dev/null; then
+    mv -f "$tmpfile" "$DEST/$file"
+    # Rendre exécutable immédiatement si c'est un script
+    case "$file" in *.sh) chmod +x "$DEST/$file" 2>/dev/null ;; esac
     echo -e "${GREEN}✓${R} $file"
   else
+    rm -f "$tmpfile" 2>/dev/null
     echo -e "${RED}✗${R} $file (échec)"
-    ((errors++))
+    errors=$((errors + 1))
   fi
 done
-
-# Rendre les scripts exécutables
-chmod +x "$DEST/statusline-command.sh" 2>/dev/null
-chmod +x "$DEST/update.sh" 2>/dev/null
-chmod +x "$DEST/uninstall.sh" 2>/dev/null
 
 # Récupérer la nouvelle version
 NEW_VERSION=$(grep -m1 'STATUSLINE_VERSION=' "$DEST/statusline-command.sh" 2>/dev/null | cut -d'"' -f2 || echo "inconnu")

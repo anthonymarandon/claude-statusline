@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+- Nouvelle ligne `💬 Conseil` : messages contextuels automatiques basés sur l'activité de la session
+  - 12 scénarios par priorité décroissante : contexte critique, surchauffe (coût+API), marathon sans commit, durée longue, session productive, session économique, etc.
+  - Combinaison intelligente de plusieurs facteurs (coût, API, durée, lignes, git dirty, contexte)
+- Suppression du skill `/session-info` (coach humoristique), remplacé par les messages contextuels intégrés
+- Fix `update.sh` : téléchargement atomique via fichier temporaire + `mv` (évite les crashs si la statusline est en cours d'exécution pendant la mise à jour)
+- Fix `update.sh` : `chmod +x` appliqué immédiatement après chaque téléchargement (au lieu d'après la boucle)
+- Fix `update.sh` : remplacement de `((errors++))` par `errors=$((errors + 1))` pour compatibilité avec `set -e`
+
 ## 1.9.0
 
 - Commande `/statusline-uninstall` : désinstallation complète de la statusline en une seule commande

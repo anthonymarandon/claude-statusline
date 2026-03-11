@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="1.9.0"
+STATUSLINE_VERSION="2.0.0"
 
 # Vérifier que jq est disponible
 if ! command -v jq &>/dev/null; then
@@ -228,6 +228,67 @@ if [ "$exceeds_200k" = "true" ]; then
   warn=$(printf " \033[1;5;41;97m ⚠ >200k \033[0m")
 fi
 
+# -- Message contextuel (priorité décroissante) --
+ctx_msg=""
+C_MSG="\033[38;5;252m"  # light gray for messages
+
+# Valeurs numériques pour les conditions combinées
+_cost_val=$(echo "$cost_usd" | LANG=C awk '{print $1+0}')
+_api_val=${api_pct:-0}
+_dur_val=${total_sec:-0}
+_lines_val=${lines_added:-0}
+_has_dirty=""
+if [ -n "$git_dirty" ]; then _has_dirty="true"; fi
+
+# 1. Contexte critique (priorité max)
+if [ "$exceeds_200k" = "true" ]; then
+  ctx_msg="💥 Compression active — qualité dégradée"
+elif [ "$pct" -gt 80 ] 2>/dev/null; then
+  ctx_msg="🔴 Contexte critique — nouvelle session recommandée"
+# 2. Session en surchauffe
+elif [ "$(echo "$_cost_val $_api_val" | LANG=C awk '{print ($1>3 && $2>60)}')" = "1" ]; then
+  ctx_msg="🔥 Session intensive — pensez à une nouvelle session"
+# 3. Marathon sans commit
+elif [ "$_dur_val" -ge 1800 ] 2>/dev/null && [ "$_has_dirty" = "true" ] && [ "$_lines_val" -gt 50 ] 2>/dev/null; then
+  ctx_msg="💾 Beaucoup de modifs non commitées — pensez à sauvegarder"
+# 4. Contexte chargé
+elif [ "$pct" -gt 65 ] 2>/dev/null; then
+  ctx_msg="⚠️  Contexte chargé — concluez bientôt"
+# 5. Coût élevé
+elif [ "$(echo "$_cost_val" | LANG=C awk '{print ($1>=5)}')" = "1" ]; then
+  ctx_msg="🔴 Session coûteuse — nouvelle session recommandée"
+elif [ "$(echo "$_cost_val" | LANG=C awk '{print ($1>=3)}')" = "1" ]; then
+  ctx_msg="⚠️  Pensez à démarrer une nouvelle session bientôt"
+# 6. Durée longue
+elif [ "$_dur_val" -ge 7200 ] 2>/dev/null; then
+  ctx_msg="🛑 +2h de session — nouvelle session conseillée"
+elif [ "$_dur_val" -ge 3600 ] 2>/dev/null; then
+  ctx_msg="⏰ Session longue — pause recommandée"
+# 7. Session longue mais légère
+elif [ "$_dur_val" -ge 1800 ] 2>/dev/null && [ "$(echo "$_cost_val" | LANG=C awk '{print ($1<0.5)}')" = "1" ] && [ "$_api_val" -lt 20 ] 2>/dev/null; then
+  ctx_msg="🐢 Session longue mais peu active — tout va bien"
+# 8. Session tranquille (peu d'activité)
+elif [ "$_dur_val" -ge 600 ] 2>/dev/null && [ "$(echo "$_cost_val" | LANG=C awk '{print ($1<0.5)}')" = "1" ] && [ "$_api_val" -lt 20 ] 2>/dev/null && [ "$_lines_val" -lt 20 ] 2>/dev/null; then
+  ctx_msg="😴 Session calme — peu d'activité pour le moment"
+# 9. Session productive (positif)
+elif [ "$_lines_val" -gt 100 ] 2>/dev/null && [ "$(echo "$_cost_val" | LANG=C awk '{print ($1<2)}')" = "1" ]; then
+  ctx_msg="🚀 Très productif ! Bon ratio coût/code"
+# 10. Session efficace (positif)
+elif [ "$(echo "$_cost_val" | LANG=C awk '{print ($1<1)}')" = "1" ] && [ "$_api_val" -le 40 ] 2>/dev/null && [ "$_dur_val" -lt 900 ] 2>/dev/null; then
+  ctx_msg="✨ Session efficace et économique"
+# 11. Indicateurs simples par défaut
+elif [ "$_dur_val" -ge 1800 ] 2>/dev/null; then
+  ctx_msg="☕ Pensez à faire une pause"
+elif [ "$(echo "$_cost_val $_api_val" | LANG=C awk '{print ($1>=1 && $2>50)}')" = "1" ]; then
+  ctx_msg="💰 Session bien chargée"
+elif [ "$_api_val" -gt 70 ] 2>/dev/null; then
+  ctx_msg="🚨 Usage très intensif — laissez Claude respirer"
+elif [ "$(echo "$_cost_val" | LANG=C awk '{print ($1<0.5)}')" = "1" ]; then
+  ctx_msg="💚 Session très économique"
+else
+  ctx_msg="✅ Budget maîtrisé"
+fi
+
 # -- Labels --
 C_LABEL="\033[38;5;245m"  # gray for labels
 
@@ -243,4 +304,5 @@ if [ -n "$output_part" ]; then
   printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$output_part"
 fi
 printf "%b\n" "$(printf "${C_LABEL}📡 Statusline ${R}")$statusline_part"
-printf "%b" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"
+printf "%b\n" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"
+printf "%b" "$(printf "${C_LABEL}💬 Conseil    ${R}")${C_MSG}${ctx_msg}${R}"

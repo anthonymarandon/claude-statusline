@@ -44,7 +44,6 @@ FILES=(
 )
 
 SKILL_DIRS=(
-  "$DEST/skills/session-info"
   "$DEST/skills/statusline-update"
   "$DEST/skills/statusline-help"
   "$DEST/skills/statusline-uninstall"
