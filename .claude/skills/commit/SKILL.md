@@ -53,10 +53,13 @@ feat(statusline): ajout du layout responsive
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
-## Étape 3 : Commit et push
+## Étape 3 : Commit, tag et push
 
 - Ajouter les fichiers modifiés au staging (`git add` par fichier, jamais `git add .` ou `-A`)
 - Créer le commit
-- Afficher le résultat du commit
+- **Créer un tag annoté** sur le commit avec la version correspondante (ex: `git tag -a v2.0.0 -m "v2.0.0 — description courte"`)
+  - Le numéro de version doit correspondre à `STATUSLINE_VERSION` dans `statusline-command.sh`
+  - Si la version n'a pas changé, incrémenter le patch (ex: `v2.0.0` → `v2.0.1`)
+- Afficher le résultat du commit et du tag
 - Demander à l'utilisateur : **"Tu veux que je push sur le remote ?"**
-- Ne push que si l'utilisateur confirme explicitement
+- Ne push que si l'utilisateur confirme explicitement (penser à `git push --tags`)
