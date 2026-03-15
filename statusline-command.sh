@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="2.1.0"
+STATUSLINE_VERSION="2.2.0"
 
 # Vérifier que jq est disponible
 if ! command -v jq &>/dev/null; then
@@ -30,7 +30,10 @@ eval "$(echo "$input" | jq -r '
   "lines_added=" + (.cost.total_lines_added // 0 | tostring | @sh),
   "lines_removed=" + (.cost.total_lines_removed // 0 | tostring | @sh),
   "used_pct=" + (.context_window.used_percentage // 0 | tostring | @sh),
+  "total_input=" + (.context_window.total_input_tokens // 0 | tostring | @sh),
   "total_output=" + (.context_window.total_output_tokens // 0 | tostring | @sh),
+  "cache_read=" + (.context_window.current_usage.cache_read_input_tokens // 0 | tostring | @sh),
+  "cache_create=" + (.context_window.current_usage.cache_creation_input_tokens // 0 | tostring | @sh),
   "exceeds_200k=" + (.exceeds_200k_tokens // false | tostring | @sh),
   "version=" + (.version // "" | @sh),
   "output_style=" + (.output_style.name // "" | @sh)
@@ -61,6 +64,8 @@ elif [ -z "$TERM" ] || ! command -v tput &>/dev/null || [ "$(tput colors 2>/dev/
   C_DEL="\033[1;33m"         # bold yellow
   C_VER="\033[37m"           # white
   C_OUTPUT="\033[1;36m"      # bold cyan (fallback)
+  C_INPUT="\033[1;34m"       # bold blue (fallback)
+  C_CACHE="\033[1;36m"       # bold cyan (fallback)
   C_UPDATE="\033[1;32m"      # bold green
   SEP="\033[35m │ ${R}"
 else
@@ -75,9 +80,12 @@ else
   C_DEL="\033[1;38;5;208m"   # orange
   C_VER="\033[38;5;245m"     # gray
   C_OUTPUT="\033[1;38;5;117m" # bold sky blue
+  C_INPUT="\033[1;38;5;147m"  # soft purple for input tokens
+  C_CACHE="\033[1;38;5;51m"   # aqua for cache
   C_UPDATE="\033[1;38;5;82m" # bright green for update notice
   SEP="\033[38;5;99m │ ${R}"
 fi
+
 
 # -- Update check (cache 2min, sync on stale/missing) --
 UPDATE_CACHE="$HOME/.claude/.statusline-latest-version"
@@ -216,17 +224,44 @@ else
   api_part=""
 fi
 
-# -- Tokens output --
-if [ "$total_output" -gt 0 ] 2>/dev/null; then
-  if [ "$total_output" -ge 1000 ]; then
-    # Arithmétique bash : division entière + reste pour une décimale
+# -- Tokens output + input --
+output_part=""
+if [ "$total_output" -gt 0 ] 2>/dev/null || [ "$total_input" -gt 0 ] 2>/dev/null; then
+  # Formatage output
+  if [ "${total_output:-0}" -ge 1000 ] 2>/dev/null; then
     out_k="$(( total_output / 1000 )).$(( (total_output % 1000) / 100 ))"
-    output_part=$(printf "${C_OUTPUT}✎ %sk${R}" "$out_k")
+    out_fmt="${C_OUTPUT}↑${out_k}k${R}"
   else
-    output_part=$(printf "${C_OUTPUT}✎ %s${R}" "$total_output")
+    out_fmt="${C_OUTPUT}↑${total_output:-0}${R}"
   fi
-else
-  output_part=""
+  # Formatage input
+  if [ "${total_input:-0}" -ge 1000 ] 2>/dev/null; then
+    in_k="$(( total_input / 1000 )).$(( (total_input % 1000) / 100 ))"
+    in_fmt="${C_INPUT}↓${in_k}k${R}"
+  else
+    in_fmt="${C_INPUT}↓${total_input:-0}${R}"
+  fi
+  output_part=$(printf "%s ${SEP}%s" "$in_fmt" "$out_fmt")
+fi
+
+# -- Cache hit rate (prompt caching) --
+cache_part=""
+_cache_total=$(( ${cache_read:-0} + ${cache_create:-0} ))
+if [ "$_cache_total" -gt 0 ] 2>/dev/null; then
+  cache_pct=$(( cache_read * 100 / _cache_total ))
+  if [ "${cache_read:-0}" -ge 1000 ] 2>/dev/null; then
+    cr_fmt="$(( cache_read / 1000 )).$(( (cache_read % 1000) / 100 ))k"
+  else
+    cr_fmt="${cache_read:-0}"
+  fi
+  if [ "$cache_pct" -ge 75 ] 2>/dev/null; then
+    C_CACHE_PCT="\033[1;38;5;46m"
+  elif [ "$cache_pct" -ge 40 ] 2>/dev/null; then
+    C_CACHE_PCT="\033[1;38;5;220m"
+  else
+    C_CACHE_PCT="\033[1;38;5;208m"
+  fi
+  cache_part=$(printf "${C_CACHE_PCT}%s%%${R} ${DIM}(%s lus)${R}" "$cache_pct" "$cr_fmt")
 fi
 
 # -- Context % --
@@ -337,7 +372,11 @@ if [ -n "$api_part" ]; then
   printf "%b\n" "$(printf "${C_LABEL}⚡ API        ${R}")$api_part"
 fi
 if [ -n "$output_part" ]; then
-  printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$output_part"
+  tokens_line="$output_part"
+  if [ -n "$cache_part" ]; then
+    tokens_line+=$(printf " ${SEP}💾 %s" "$cache_part")
+  fi
+  printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$tokens_line"
 fi
 printf "%b\n" "$(printf "${C_LABEL}📡 Statusline ${R}")$statusline_part"
 printf "%b\n" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"
