@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.2.0
+
+- Feat : affichage des tokens **input** (↓) en violet doux et **output** (↑) en bleu ciel sur la ligne Tokens
+- Feat : taux de **cache hit** (💾 XX%) avec volume de tokens lus depuis le cache, coloré selon l'efficacité (vert ≥ 75%, jaune 40–75%, orange < 40%)
+- Feat : nouvelles variables jq extraites : `total_input`, `cache_read`, `cache_create`
+- Feat : nouvelles couleurs `C_INPUT` (violet doux) et `C_CACHE` (aqua) pour les tokens
+- Docs : ajout de la section « Avertissement — Pratiques non autorisées » dans le README
+- Docs : documentation détaillée des cas d'usage non couverts (`maquette/usage-notice-warning/`)
+- Docs : mise à jour de la maquette tokens avec les variantes input/output et cache hit
+- Suppression : fonctionnalité d'affichage des quotas d'abonnement (usage 5h/7j) — repose sur un endpoint API non documenté et viole les CGU d'Anthropic (voir `maquette/usage-notice-warning/usage-quota-non-inclus.md`)
+
 ## 2.1.0
 
 - Fix : validation après parsing jq — affiche "⚠ Statusline : données indisponibles" si le JSON est malformé

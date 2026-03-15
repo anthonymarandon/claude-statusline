@@ -86,91 +86,6 @@ else
   SEP="\033[38;5;99m │ ${R}"
 fi
 
-# -- Usage quota (5h session + 7j semaine, cache 60s) --
-USAGE_CACHE="$HOME/.claude/.statusline-usage.json"
-USAGE_TTL=60
-usage_part=""
-
-_fetch_usage() {
-  local token
-  token=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
-  [ -z "$token" ] && return
-  local result
-  result=$(curl -sf --max-time 5 \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    -H "User-Agent: claude-code/2.0.32" \
-    -H "Authorization: Bearer $token" \
-    -H "anthropic-beta: oauth-2025-04-20" \
-    "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-  [ -n "$result" ] && echo "$result" > "$USAGE_CACHE" 2>/dev/null
-}
-
-# Lire ou rafraîchir le cache usage
-if [ -f "$USAGE_CACHE" ]; then
-  now_u=$(date +%s)
-  mtime_u=$(date -r "$USAGE_CACHE" +%s 2>/dev/null || stat -c %Y "$USAGE_CACHE" 2>/dev/null)
-  age_u=$(( now_u - ${mtime_u:-0} ))
-  [ "$age_u" -ge "$USAGE_TTL" ] && _fetch_usage
-else
-  _fetch_usage
-fi
-
-if [ -f "$USAGE_CACHE" ]; then
-  read -r five_h_pct seven_d_pct five_h_reset seven_d_reset <<< "$(jq -r '
-    ((.five_hour.utilization // 0) | round | tostring) + " " +
-    ((.seven_day.utilization // 0) | round | tostring) + " " +
-    (.five_hour.resets_at // "") + " " +
-    (.seven_day.resets_at // "")
-  ' "$USAGE_CACHE" 2>/dev/null)"
-
-  # Couleur selon le % d'utilisation
-  _usage_color() {
-    local pct=$1
-    if [ "$pct" -ge 80 ] 2>/dev/null; then echo "\033[1;38;5;196m"
-    elif [ "$pct" -ge 60 ] 2>/dev/null; then echo "\033[1;38;5;208m"
-    elif [ "$pct" -ge 40 ] 2>/dev/null; then echo "\033[1;38;5;220m"
-    else echo "\033[38;5;78m"
-    fi
-  }
-
-  # Barre de progression 8 chars
-  _usage_bar() {
-    local pct=$1
-    local filled=$(( pct * 8 / 100 ))
-    local empty=$(( 8 - filled ))
-    local bar=""
-    for ((i=0; i<filled; i++)); do bar+="█"; done
-    for ((i=0; i<empty; i++)); do bar+="░"; done
-    echo "$bar"
-  }
-
-  # Formatage heure de reset (ISO → heure locale lisible)
-  _fmt_reset() {
-    local ts=$1
-    [ -z "$ts" ] && echo "" && return
-    # Extraire heure:minute depuis ISO 8601
-    local hm
-    hm=$(echo "$ts" | sed 's/T\([0-9][0-9]:[0-9][0-9]\).*/\1/' 2>/dev/null)
-    echo "${hm}UTC"
-  }
-
-  if [ -n "$five_h_pct" ] && [ -n "$seven_d_pct" ]; then
-    C5=$(_usage_color "$five_h_pct")
-    C7=$(_usage_color "$seven_d_pct")
-    BAR5=$(_usage_bar "$five_h_pct")
-    BAR7=$(_usage_bar "$seven_d_pct")
-    R5=$(_fmt_reset "$five_h_reset")
-    R7=$(_fmt_reset "$seven_d_reset")
-    reset5_str=""
-    reset7_str=""
-    [ -n "$R5" ] && reset5_str=$(printf " ${DIM}↺%s${R}" "$R5")
-    [ -n "$R7" ] && reset7_str=$(printf " ${DIM}↺%s${R}" "$R7")
-    usage_part=$(printf "${C5}%s %s%%${R}%b ${SEP}${C7}%s %s%%${R}%b" \
-      "$BAR5" "$five_h_pct" "$reset5_str" \
-      "$BAR7" "$seven_d_pct" "$reset7_str")
-  fi
-fi
 
 # -- Update check (cache 2min, sync on stale/missing) --
 UPDATE_CACHE="$HOME/.claude/.statusline-latest-version"
@@ -462,9 +377,6 @@ if [ -n "$output_part" ]; then
     tokens_line+=$(printf " ${SEP}💾 %s" "$cache_part")
   fi
   printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$tokens_line"
-fi
-if [ -n "$usage_part" ]; then
-  printf "%b\n" "$(printf "${C_LABEL}📈 Usage      ${R}")$usage_part"
 fi
 printf "%b\n" "$(printf "${C_LABEL}📡 Statusline ${R}")$statusline_part"
 printf "%b\n" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"

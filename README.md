@@ -54,6 +54,26 @@ La statusline vérifie automatiquement les mises à jour toutes les 2 minutes. U
 
 ---
 
+## Avertissement — Pratiques non autorisées
+
+> **Les contributeurs doivent impérativement lire cette section avant de soumettre une PR.**
+
+Ce projet n'intègre **aucun appel réseau vers des API non documentées** d'Anthropic.
+Les fonctionnalités reposent uniquement sur les données JSON fournies nativement par Claude Code au script statusline.
+
+Les pratiques suivantes sont **interdites** dans ce projet car elles violent les [Conditions Générales d'Utilisation](https://www.anthropic.com/legal/consumer-terms) d'Anthropic :
+
+- Utiliser des **tokens OAuth** d'abonnement (Pro/Max) en dehors de Claude Code ou Claude.ai
+- Appeler des **endpoints API non documentés** (découverts par reverse-engineering)
+- **Usurper le User-Agent** de Claude Code (`claude-code/X.X.X`)
+- Accéder aux services Anthropic via des **scripts ou bots non autorisés**
+
+Pour consulter les quotas d'abonnement, utilisez la commande `/usage` directement dans Claude Code.
+
+Voir la documentation détaillée : [`maquette/usage-notice-warning/usage-quota-non-inclus.md`](maquette/usage-notice-warning/usage-quota-non-inclus.md)
+
+---
+
 ## Personnalisation
 
 Modifiez les variables de couleur en haut de `~/.claude/statusline-command.sh` :
