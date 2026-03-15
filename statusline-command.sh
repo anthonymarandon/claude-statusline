@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — custom theme v2
 
-STATUSLINE_VERSION="2.1.0"
+STATUSLINE_VERSION="2.2.0"
 
 # Vérifier que jq est disponible
 if ! command -v jq &>/dev/null; then
@@ -30,7 +30,10 @@ eval "$(echo "$input" | jq -r '
   "lines_added=" + (.cost.total_lines_added // 0 | tostring | @sh),
   "lines_removed=" + (.cost.total_lines_removed // 0 | tostring | @sh),
   "used_pct=" + (.context_window.used_percentage // 0 | tostring | @sh),
+  "total_input=" + (.context_window.total_input_tokens // 0 | tostring | @sh),
   "total_output=" + (.context_window.total_output_tokens // 0 | tostring | @sh),
+  "cache_read=" + (.context_window.current_usage.cache_read_input_tokens // 0 | tostring | @sh),
+  "cache_create=" + (.context_window.current_usage.cache_creation_input_tokens // 0 | tostring | @sh),
   "exceeds_200k=" + (.exceeds_200k_tokens // false | tostring | @sh),
   "version=" + (.version // "" | @sh),
   "output_style=" + (.output_style.name // "" | @sh)
@@ -61,6 +64,8 @@ elif [ -z "$TERM" ] || ! command -v tput &>/dev/null || [ "$(tput colors 2>/dev/
   C_DEL="\033[1;33m"         # bold yellow
   C_VER="\033[37m"           # white
   C_OUTPUT="\033[1;36m"      # bold cyan (fallback)
+  C_INPUT="\033[1;34m"       # bold blue (fallback)
+  C_CACHE="\033[1;36m"       # bold cyan (fallback)
   C_UPDATE="\033[1;32m"      # bold green
   SEP="\033[35m │ ${R}"
 else
@@ -75,8 +80,96 @@ else
   C_DEL="\033[1;38;5;208m"   # orange
   C_VER="\033[38;5;245m"     # gray
   C_OUTPUT="\033[1;38;5;117m" # bold sky blue
+  C_INPUT="\033[1;38;5;147m"  # soft purple for input tokens
+  C_CACHE="\033[1;38;5;51m"   # aqua for cache
   C_UPDATE="\033[1;38;5;82m" # bright green for update notice
   SEP="\033[38;5;99m │ ${R}"
+fi
+
+# -- Usage quota (5h session + 7j semaine, cache 60s) --
+USAGE_CACHE="$HOME/.claude/.statusline-usage.json"
+USAGE_TTL=60
+usage_part=""
+
+_fetch_usage() {
+  local token
+  token=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
+  [ -z "$token" ] && return
+  local result
+  result=$(curl -sf --max-time 5 \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/json" \
+    -H "User-Agent: claude-code/2.0.32" \
+    -H "Authorization: Bearer $token" \
+    -H "anthropic-beta: oauth-2025-04-20" \
+    "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
+  [ -n "$result" ] && echo "$result" > "$USAGE_CACHE" 2>/dev/null
+}
+
+# Lire ou rafraîchir le cache usage
+if [ -f "$USAGE_CACHE" ]; then
+  now_u=$(date +%s)
+  mtime_u=$(date -r "$USAGE_CACHE" +%s 2>/dev/null || stat -c %Y "$USAGE_CACHE" 2>/dev/null)
+  age_u=$(( now_u - ${mtime_u:-0} ))
+  [ "$age_u" -ge "$USAGE_TTL" ] && _fetch_usage
+else
+  _fetch_usage
+fi
+
+if [ -f "$USAGE_CACHE" ]; then
+  read -r five_h_pct seven_d_pct five_h_reset seven_d_reset <<< "$(jq -r '
+    ((.five_hour.utilization // 0) | round | tostring) + " " +
+    ((.seven_day.utilization // 0) | round | tostring) + " " +
+    (.five_hour.resets_at // "") + " " +
+    (.seven_day.resets_at // "")
+  ' "$USAGE_CACHE" 2>/dev/null)"
+
+  # Couleur selon le % d'utilisation
+  _usage_color() {
+    local pct=$1
+    if [ "$pct" -ge 80 ] 2>/dev/null; then echo "\033[1;38;5;196m"
+    elif [ "$pct" -ge 60 ] 2>/dev/null; then echo "\033[1;38;5;208m"
+    elif [ "$pct" -ge 40 ] 2>/dev/null; then echo "\033[1;38;5;220m"
+    else echo "\033[38;5;78m"
+    fi
+  }
+
+  # Barre de progression 8 chars
+  _usage_bar() {
+    local pct=$1
+    local filled=$(( pct * 8 / 100 ))
+    local empty=$(( 8 - filled ))
+    local bar=""
+    for ((i=0; i<filled; i++)); do bar+="█"; done
+    for ((i=0; i<empty; i++)); do bar+="░"; done
+    echo "$bar"
+  }
+
+  # Formatage heure de reset (ISO → heure locale lisible)
+  _fmt_reset() {
+    local ts=$1
+    [ -z "$ts" ] && echo "" && return
+    # Extraire heure:minute depuis ISO 8601
+    local hm
+    hm=$(echo "$ts" | sed 's/T\([0-9][0-9]:[0-9][0-9]\).*/\1/' 2>/dev/null)
+    echo "${hm}UTC"
+  }
+
+  if [ -n "$five_h_pct" ] && [ -n "$seven_d_pct" ]; then
+    C5=$(_usage_color "$five_h_pct")
+    C7=$(_usage_color "$seven_d_pct")
+    BAR5=$(_usage_bar "$five_h_pct")
+    BAR7=$(_usage_bar "$seven_d_pct")
+    R5=$(_fmt_reset "$five_h_reset")
+    R7=$(_fmt_reset "$seven_d_reset")
+    reset5_str=""
+    reset7_str=""
+    [ -n "$R5" ] && reset5_str=$(printf " ${DIM}↺%s${R}" "$R5")
+    [ -n "$R7" ] && reset7_str=$(printf " ${DIM}↺%s${R}" "$R7")
+    usage_part=$(printf "${C5}%s %s%%${R}%b ${SEP}${C7}%s %s%%${R}%b" \
+      "$BAR5" "$five_h_pct" "$reset5_str" \
+      "$BAR7" "$seven_d_pct" "$reset7_str")
+  fi
 fi
 
 # -- Update check (cache 2min, sync on stale/missing) --
@@ -216,17 +309,44 @@ else
   api_part=""
 fi
 
-# -- Tokens output --
-if [ "$total_output" -gt 0 ] 2>/dev/null; then
-  if [ "$total_output" -ge 1000 ]; then
-    # Arithmétique bash : division entière + reste pour une décimale
+# -- Tokens output + input --
+output_part=""
+if [ "$total_output" -gt 0 ] 2>/dev/null || [ "$total_input" -gt 0 ] 2>/dev/null; then
+  # Formatage output
+  if [ "${total_output:-0}" -ge 1000 ] 2>/dev/null; then
     out_k="$(( total_output / 1000 )).$(( (total_output % 1000) / 100 ))"
-    output_part=$(printf "${C_OUTPUT}✎ %sk${R}" "$out_k")
+    out_fmt="${C_OUTPUT}↑${out_k}k${R}"
   else
-    output_part=$(printf "${C_OUTPUT}✎ %s${R}" "$total_output")
+    out_fmt="${C_OUTPUT}↑${total_output:-0}${R}"
   fi
-else
-  output_part=""
+  # Formatage input
+  if [ "${total_input:-0}" -ge 1000 ] 2>/dev/null; then
+    in_k="$(( total_input / 1000 )).$(( (total_input % 1000) / 100 ))"
+    in_fmt="${C_INPUT}↓${in_k}k${R}"
+  else
+    in_fmt="${C_INPUT}↓${total_input:-0}${R}"
+  fi
+  output_part=$(printf "%s ${SEP}%s" "$in_fmt" "$out_fmt")
+fi
+
+# -- Cache hit rate (prompt caching) --
+cache_part=""
+_cache_total=$(( ${cache_read:-0} + ${cache_create:-0} ))
+if [ "$_cache_total" -gt 0 ] 2>/dev/null; then
+  cache_pct=$(( cache_read * 100 / _cache_total ))
+  if [ "${cache_read:-0}" -ge 1000 ] 2>/dev/null; then
+    cr_fmt="$(( cache_read / 1000 )).$(( (cache_read % 1000) / 100 ))k"
+  else
+    cr_fmt="${cache_read:-0}"
+  fi
+  if [ "$cache_pct" -ge 75 ] 2>/dev/null; then
+    C_CACHE_PCT="\033[1;38;5;46m"
+  elif [ "$cache_pct" -ge 40 ] 2>/dev/null; then
+    C_CACHE_PCT="\033[1;38;5;220m"
+  else
+    C_CACHE_PCT="\033[1;38;5;208m"
+  fi
+  cache_part=$(printf "${C_CACHE_PCT}%s%%${R} ${DIM}(%s lus)${R}" "$cache_pct" "$cr_fmt")
 fi
 
 # -- Context % --
@@ -337,7 +457,14 @@ if [ -n "$api_part" ]; then
   printf "%b\n" "$(printf "${C_LABEL}⚡ API        ${R}")$api_part"
 fi
 if [ -n "$output_part" ]; then
-  printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$output_part"
+  tokens_line="$output_part"
+  if [ -n "$cache_part" ]; then
+    tokens_line+=$(printf " ${SEP}💾 %s" "$cache_part")
+  fi
+  printf "%b\n" "$(printf "${C_LABEL}✎ Tokens     ${R}")$tokens_line"
+fi
+if [ -n "$usage_part" ]; then
+  printf "%b\n" "$(printf "${C_LABEL}📈 Usage      ${R}")$usage_part"
 fi
 printf "%b\n" "$(printf "${C_LABEL}📡 Statusline ${R}")$statusline_part"
 printf "%b\n" "$(printf "${C_LABEL}📊 Contexte   ${R}")${ctx_part}${warn}"
