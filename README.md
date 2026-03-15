@@ -122,15 +122,15 @@ cat ~/.claude/.statusline-debug.json
 <details>
 <summary>⚠️ Note importante — Statusline bloquée en mode bypass permission (v2.1.74+)</summary>
 
-Si vous utilisez `"skipDangerousModePermissionPrompt": true` dans `~/.claude/settings.json`, la statusline peut ne pas s'afficher. Ce mode saute le dialogue de workspace trust au démarrage, mais ne valide jamais le trust nécessaire à l'exécution de la statusline.
+Si vous lancez Claude Code avec un mode d'autorisation spécifique (comme `--dangerously-skip-permissions`), la statusline peut ne pas s'afficher. Ces modes sautent le dialogue de workspace trust au démarrage, mais ne valident jamais le trust nécessaire à l'exécution de la statusline.
 
 **Solution :**
 
-1. Retirez temporairement `"skipDangerousModePermissionPrompt": true` de votre `settings.json`
-2. Lancez `claude` et acceptez le dialogue de workspace trust
-3. Remettez `"skipDangerousModePermissionPrompt": true`
+1. Lancez d'abord `claude` normalement (sans mode d'autorisation) dans votre répertoire de travail
+2. Acceptez le dialogue de workspace trust
+3. Vous pouvez ensuite relancer Claude avec le mode de votre choix (bypass, etc.)
 
-Le trust étant désormais enregistré, la statusline fonctionnera normalement. Cette opération est à refaire si le trust est réinitialisé (changement de répertoire de travail, etc.).
+Le trust étant désormais enregistré pour ce répertoire, la statusline fonctionnera normalement. Cette opération est à refaire pour chaque nouveau répertoire de travail.
 
 </details>
 
