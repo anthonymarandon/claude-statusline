@@ -1,135 +1,62 @@
 # Claude Code Custom Statusline
 
-> :art: Une statusline personnalisée et colorée pour [Claude Code](https://docs.anthropic.com/en/docs/claude-code), le CLI officiel d'Anthropic.
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/anthonymarandon/claude-statusline/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Shell](https://img.shields.io/badge/shell-bash-informational)](statusline-command.sh)
+[![macOS](https://img.shields.io/badge/macOS-supported-green)](https://github.com/anthonymarandon/claude-statusline)
+[![Linux](https://img.shields.io/badge/Linux-supported-green)](https://github.com/anthonymarandon/claude-statusline)
+[![Windows](https://img.shields.io/badge/Windows-non%20v%C3%A9rifi%C3%A9-orange)](https://github.com/anthonymarandon/claude-statusline)
 
----
+> Une statusline personnalisée et colorée pour [Claude Code](https://docs.anthropic.com/en/docs/claude-code), le CLI officiel d'Anthropic.
 
-## :eyes: Aperçu
+![Preview](screenshots/preview-claude-statusline.png)
 
-Statusline verticale avec un indicateur par ligne, labels clairs, coût dynamique, ratio API avec icônes adaptatives, tokens output, alertes contexte — tout ce qu'il faut pour garder le contrôle de sa session.
-
-![Preview](screenshots/preview.png)
-
----
-
-## :rocket: Installation
+## Installation
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/anthonymarandon/claude-statusline/main/install.sh | bash
 ```
 
-> Le script télécharge le fichier dans `~/.claude/`, configure `settings.json`, et vous demande confirmation si des fichiers existants seront modifiés.
+### Prérequis
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — `claude --version`
+- [`jq`](https://jqlang.org/) — `jq --version`
+
+> Selon votre système d'exploitation, vérifiez que vous disposez de ces outils avec les commandes ci-dessus.
 
 ---
 
-## :arrows_counterclockwise: Mise à jour
+## Indicateurs
 
-La statusline vérifie automatiquement (toutes les 2 minutes) si une nouvelle version est disponible. Si c'est le cas, un indicateur `⬆ vX.Y.Z` apparaît dans la statusline.
-
-Pour mettre à jour, deux options :
-
-```bash
-# Depuis Claude Code (recommandé)
-/statusline-update
-
-# Ou directement en terminal
-bash ~/.claude/update.sh
-```
-
----
-
-## :speech_balloon: Commandes
-
-### Commande `/statusline-help`
-
-Tapez `/statusline-help` dans Claude Code pour obtenir une **explication visuelle** de chaque indicateur de la statusline : ce qu'il mesure, les codes couleur, et quand il apparaît.
-
-### Commande `/statusline-update`
-
-Tapez `/statusline-update` dans Claude Code pour lancer la mise à jour de la statusline sans quitter votre session.
-
-### Commande `/statusline-uninstall`
-
-Tapez `/statusline-uninstall` dans Claude Code pour **désinstaller complètement** la statusline. Le script supprime tous les fichiers associés (scripts, skills, cache) et retire la clé `statusLine` de `settings.json` sans toucher au reste de votre configuration.
-
-> Une confirmation est demandée avant toute suppression.
-
----
-
-## :bar_chart: Fonctionnalités
-
-| Fonctionnalité | Détail |
+| Indicateur | Description |
 |---|---|
-| :file_folder: Chemin | Répertoire courant avec `~` en cyan |
-| :deciduous_tree: Branche git | Branche active en magenta + ● orange si dirty |
-| :robot: Modèle | Nom du modèle Claude (ex: Opus 4.6) en rose |
-| :satellite: Statusline | Version de la statusline + indicateur de mise à jour |
-| :dollar: Coût dynamique | Couleur adaptative selon le montant |
-| :heavy_plus_sign: :heavy_minus_sign: Lignes | Lignes ajoutées (vert) / supprimées (orange) |
-| :zap: Ratio API | Icône et couleur selon l'intensité + durée de session |
-| :pencil2: Tokens output | Tokens générés par Claude dans la session |
-| :bar_chart: Barre contexte | Barre `█░` colorée selon le remplissage |
-| :rotating_light: Alerte > 75% | Fond rouge quand le contexte se remplit |
-| :warning: Alerte > 200k | Avertissement clignotant si la fenêtre explose |
-| :arrow_up: Mise à jour | Indicateur vert quand une nouvelle version est disponible |
-| :speech_balloon: Message contextuel | Conseil dynamique selon l'état de la session |
-| :grey_question: `/statusline-help` | Explique chaque indicateur de la statusline |
-
-### :dollar: Coût dynamique
-
-La couleur du coût change selon le montant pour vous alerter visuellement :
-
-| Couleur | Seuil | Signification |
-|---|---|---|
-| :green_circle: Vert | < 1$ | Tout va bien |
-| :yellow_circle: Jaune | 1$ – 5$ | Ça commence à chiffrer |
-| :red_circle: Rouge | > 5$ | Session coûteuse, pensez à en ouvrir une nouvelle |
-
-### :zap: Ratio API
-
-Le pourcentage du temps passé à **attendre les réponses de Claude** par rapport au temps total de la session. L'icône change selon l'intensité :
-
-| Icône | Couleur | Seuil | Signification |
-|---|---|---|---|
-| :seedling: | :green_circle: Vert | ≤ 40% | Session économe |
-| :zap: | :yellow_circle: Jaune | 40–70% | Échange actif |
-| :fire: | :orange_circle: Orange | > 70% | Claude travaille en continu |
-
-### :speech_balloon: Messages contextuels
-
-La ligne `💬 Conseil` affiche un message dynamique qui s'adapte à l'état de votre session. Le message est choisi automatiquement selon le coût, la durée, le ratio API, le remplissage du contexte et les lignes modifiées.
-
-| Exemple | Condition |
-|---|---|
-| 🚀 Très productif ! | +100 lignes modifiées, coût < 2$ |
-| ⚠️ Pensez à démarrer une nouvelle session | Coût > 3$ ou contexte > 75% |
-| 🛑 +2h de session | Durée > 2h |
-| 😴 Session calme | Peu d'activité |
-| ✨ Session efficace et économique | Coût < 1$, API ≤ 40%, durée < 15min |
-| 💚 Session très économique | Coût < 0.50$ |
+| 📁 Dossier | Répertoire courant + branche git (● si dirty) |
+| 🤖 Modèle | Modèle Claude utilisé |
+| 💰 Coût | Couleur adaptative : 🟢 < 1$ · 🟡 1–5$ · 🔴 > 5$ |
+| ✏️ Lignes | Ajoutées / supprimées |
+| ⚡ API | Temps d'attente API : 🌱 ≤ 40% · ⚡ 40–70% · 🔥 > 70% + durée session |
+| 🔮 Tokens | Tokens output générés par Claude |
+| 📡 Statusline | Version + indicateur de mise à jour disponible |
+| 📊 Contexte | Barre de remplissage + alerte à 75% et 200k tokens |
+| 💬 Conseil | Message dynamique selon l'état de la session |
 
 ---
 
-## :package: Prérequis
+## Commandes
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installé
-- [`jq`](https://jqlang.github.io/jq/) — outil de parsing JSON en ligne de commande
-
-> :bulb: `jq` est souvent préinstallé sur macOS. Le script d'installation le vérifie automatiquement.
-
-| OS | Installer jq |
+| Commande | Action |
 |---|---|
-| :apple: macOS | `brew install jq` |
-| :penguin: Ubuntu / Debian | `sudo apt install jq` |
-| :penguin: Arch | `sudo pacman -S jq` |
-| :penguin: Fedora | `sudo dnf install jq` |
-| :computer: Windows | `winget install jqlang.jq` ou `choco install jq` |
+| `/statusline-help` | Explication visuelle de chaque indicateur |
+| `/statusline-update` | Mise à jour sans quitter la session |
+| `/statusline-uninstall` | Désinstallation complète |
+
+La statusline vérifie automatiquement les mises à jour toutes les 2 minutes. Un indicateur `⬆ vX.Y.Z` apparaît quand une nouvelle version est disponible.
 
 ---
 
-## :art: Personnalisation
+## Personnalisation
 
-Modifiez les variables de couleur en haut du script :
+Modifiez les variables de couleur en haut de `~/.claude/statusline-command.sh` :
 
 ```bash
 C_PATH="\033[1;36m"        # Chemin — cyan
@@ -141,109 +68,59 @@ C_DEL="\033[1;38;5;208m"   # Lignes supprimées — orange
 
 ---
 
-## :bug: Debug
-
-Le JSON reçu de Claude Code est sauvegardé automatiquement :
+## Debug
 
 ```bash
 cat ~/.claude/.statusline-debug.json
 ```
 
 <details>
-<summary>:mag: Voir tous les champs JSON disponibles</summary>
+<summary>Champs JSON disponibles</summary>
 
 | Champ | Description |
 |---|---|
-| `session_id` | Identifiant de la session |
-| `version` | Version de Claude Code |
 | `model.id` / `model.display_name` | Modèle utilisé |
 | `workspace.current_dir` | Répertoire courant |
 | `cost.total_cost_usd` | Coût en USD |
-| `cost.total_duration_ms` | Durée totale (ms) |
-| `cost.total_api_duration_ms` | Durée API (ms) |
+| `cost.total_duration_ms` | Durée totale |
+| `cost.total_api_duration_ms` | Durée API |
 | `cost.total_lines_added` / `removed` | Lignes modifiées |
 | `context_window.used_percentage` | % contexte utilisé |
 | `context_window.total_output_tokens` | Tokens générés |
-| `exceeds_200k_tokens` | Dépasse 200k ? |
 
 </details>
 
 ---
 
-## :warning: Note locale macOS / Europe
-
-Si votre système utilise la virgule comme séparateur décimal, le formatage des prix peut casser. Le script gère ce cas avec `LANG=C awk`. Gardez cette syntaxe si vous modifiez le script :
-
-```bash
-echo "$cost_usd" | LANG=C awk '{printf "%.4f", $1}'
-```
-
----
-
-## :wrench: Troubleshooting
+## Troubleshooting
 
 <details>
-<summary><strong>La statusline ne s'affiche pas</strong></summary>
+<summary>La statusline ne s'affiche pas</summary>
 
-1. Vérifiez que `~/.claude/settings.json` contient bien la clé `statusLine` :
-   ```bash
-   cat ~/.claude/settings.json | jq '.statusLine'
-   ```
-2. Vérifiez que le script existe et est exécutable :
-   ```bash
-   ls -la ~/.claude/statusline-command.sh
-   ```
-3. Relancez Claude Code après l'installation.
+1. Vérifiez la clé `statusLine` dans `~/.claude/settings.json` : `cat ~/.claude/settings.json | jq '.statusLine'`
+2. Vérifiez que le script existe : `ls -la ~/.claude/statusline-command.sh`
+3. Relancez Claude Code.
 
 </details>
 
 <details>
-<summary><strong>Erreur de parsing JSON / "données indisponibles"</strong></summary>
+<summary>Erreur de parsing JSON</summary>
 
 1. Vérifiez que `jq` est installé : `jq --version`
-2. Inspectez le dernier JSON reçu :
-   ```bash
-   cat ~/.claude/.statusline-debug.json
-   ```
-3. Si le fichier est vide ou absent, le problème vient de l'entrée envoyée par Claude Code.
+2. Inspectez : `cat ~/.claude/.statusline-debug.json`
 
 </details>
 
 <details>
-<summary><strong>Couleurs absentes ou caractères bizarres</strong></summary>
+<summary>Couleurs absentes</summary>
 
-- Si votre terminal ne supporte pas les 256 couleurs, la statusline bascule automatiquement en 8 couleurs basiques.
-- Si vous utilisez `NO_COLOR=1` ou `TERM=dumb`, les couleurs sont désactivées (convention [no-color.org](https://no-color.org/)).
-- Vérifiez le support couleur : `tput colors` (doit afficher `256` ou plus).
-
-</details>
-
-<details>
-<summary><strong>Problèmes de permissions</strong></summary>
-
-Les scripts doivent être exécutables :
-```bash
-chmod +x ~/.claude/statusline-command.sh ~/.claude/update.sh ~/.claude/uninstall.sh
-```
-
-Le fichier de debug doit être en permissions `600` :
-```bash
-ls -la ~/.claude/.statusline-debug.json
-```
-
-</details>
-
-<details>
-<summary><strong>La mise à jour échoue</strong></summary>
-
-1. Vérifiez votre connexion internet
-2. Testez l'accès à GitHub : `curl -sf https://api.github.com/repos/anthonymarandon/claude-statusline/tags?per_page=1 | jq '.[0].name'`
-3. En cas d'échec partiel, aucun fichier n'est modifié (rollback automatique). Réessayez plus tard.
+- Vérifiez le support : `tput colors` (doit afficher `256`+)
+- `NO_COLOR=1` ou `TERM=dumb` désactive les couleurs.
 
 </details>
 
 ---
 
-## :scroll: Licence
+## Licence
 
 MIT — Voir [LICENSE](LICENSE).
